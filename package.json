@@ -7,113 +7,112 @@
     "vscode": "^1.76.0"
   },
   "categories": [
-		"Other"
-	],
-	"activationEvents": [
-		"onLanguage:json",
-		"onLanguage:jsonc"
-	],
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:json",
+    "onLanguage:jsonc",
+    "onFileSystem:graylog"
+  ],
   "main": "./out/extension.js",
   "contributes": {
-		"viewsContainers": {
-			"activitybar": [
-				{
-					"id": "package-explorer",
-					"title": "Package Explorer",
-					"icon": "media/dep.svg"
-				}
-			]
-		},
-		"views": {
-			"package-explorer": [
-				{
-					"id": "nodeDependencies",
-					"name": "Node Dependencies",
-					"icon": "media/dep.svg",
-					"contextualTitle": "Package Explorer"
-				}
-			]
-		},
-		"commands": [
-			{
-				"command": "nodeDependencies.refreshEntry",
-				"title": "Refresh",
-				"icon": {
-					"light": "resources/light/refresh.svg",
-					"dark": "resources/dark/refresh.svg"
-				}
-			},
-			
-			{
-				"command": "nodeDependencies.openDocument",
-				"title": "openDocument"
-			},
-
-			{
-				"command": "nodeDependencies.addEntry",
-				"title": "Add"
-			},
-			{
-				"command": "nodeDependencies.editEntry",
-				"title": "Edit",
-				"icon": {
-					"light": "resources/light/edit.svg",
-					"dark": "resources/dark/edit.svg"
-				}
-			},
-			{
-				"command": "nodeDependencies.deleteEntry",
-				"title": "Delete"
-			},
-			{
-				"command": "fileExplorer.openFile",
-				"title": "Open File"
-			},
-			{
-				"command": "testView.reveal",
-				"title": "Test View: Reveal"
-			},
-			{
-				"command": "testView.changeTitle",
-				"title": "Test View: Change Title"
-			}
-		],
-		"menus": {
-			"view/title": [
-				{
-					"command": "nodeDependencies.refreshEntry",
-					"when": "view == nodeDependencies",
-					"group": "navigation"
-				},
-				{
-					"command": "nodeDependencies.addEntry",
-					"when": "view == nodeDependencies"
-				}
-			],
-			"view/item/context": [
-				{
-					"command": "nodeDependencies.editEntry",
-					"when": "view == nodeDependencies && viewItem == dependency",
-					"group": "inline"
-				},
-				{
-					"command": "nodeDependencies.deleteEntry",
-					"when": "view == nodeDependencies && viewItem == dependency"
-				}
-			]
-		},
-		"configuration": [
-			{
-				"title": "JSON Outline",
-				"properties": {
-					"jsonOutline.autorefresh": {
-						"type": "boolean",
-						"default": false
-					}
-				}
-			}
-		]
-	},
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "package-explorer",
+          "title": "Package Explorer",
+          "icon": "media/dep.svg"
+        }
+      ]
+    },
+    "views": {
+      "package-explorer": [
+        {
+          "id": "nodeDependencies",
+          "name": "Node Dependencies",
+          "icon": "media/dep.svg",
+          "contextualTitle": "Package Explorer"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "nodeDependencies.refreshEntry",
+        "title": "Refresh",
+        "icon": {
+          "light": "resources/light/refresh.svg",
+          "dark": "resources/dark/refresh.svg"
+        }
+      },
+      {
+        "command": "nodeDependencies.openDocument",
+        "title": "openDocument"
+      },
+      {
+        "command": "nodeDependencies.addEntry",
+        "title": "Add"
+      },
+      {
+        "command": "nodeDependencies.editEntry",
+        "title": "Edit",
+        "icon": {
+          "light": "resources/light/edit.svg",
+          "dark": "resources/dark/edit.svg"
+        }
+      },
+      {
+        "command": "nodeDependencies.deleteEntry",
+        "title": "Delete"
+      },
+      {
+        "command": "fileExplorer.openFile",
+        "title": "Open File"
+      },
+      {
+        "command": "testView.reveal",
+        "title": "Test View: Reveal"
+      },
+      {
+        "command": "testView.changeTitle",
+        "title": "Test View: Change Title"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "nodeDependencies.refreshEntry",
+          "when": "view == nodeDependencies",
+          "group": "navigation"
+        },
+        {
+          "command": "nodeDependencies.addEntry",
+          "when": "view == nodeDependencies"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "nodeDependencies.editEntry",
+          "when": "view == nodeDependencies && viewItem == dependency",
+          "group": "inline"
+        },
+        {
+          "command": "nodeDependencies.deleteEntry",
+          "when": "view == nodeDependencies && viewItem == dependency"
+        }
+      ]
+    },
+    "configuration": [
+      {
+        "title": "JSON Outline",
+        "properties": {
+          "jsonOutline.autorefresh": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      }
+    ]
+  },
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
@@ -123,16 +122,20 @@
     "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
-    "@types/vscode": "^1.76.0",
     "@types/glob": "^8.1.0",
     "@types/mocha": "^10.0.1",
     "@types/node": "16.x",
+    "@types/vscode": "^1.76.0",
     "@typescript-eslint/eslint-plugin": "^5.53.0",
     "@typescript-eslint/parser": "^5.53.0",
+    "@vscode/test-electron": "^2.2.3",
     "eslint": "^8.34.0",
     "glob": "^8.1.0",
     "mocha": "^10.2.0",
-    "typescript": "^4.9.5",
-    "@vscode/test-electron": "^2.2.3"
+    "typescript": "^4.9.5"
+  },
+  "dependencies": {
+    "mkdirp": "^2.1.5",
+    "rimraf": "^4.4.0"
   }
 }

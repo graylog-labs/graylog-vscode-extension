@@ -1,0 +1,31 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ConnectionPart = void 0;
+const vscode = require("vscode");
+const fs = require("fs");
+class ConnectionPart {
+    constructor(graylogFilesystem) {
+        this.graylogFilesystem = graylogFilesystem;
+        this.workingDirectory = "";
+        this.workingDirectory = this.getDefaultWorkingDirectory();
+    }
+    getDefaultWorkingDirectory() {
+        if (fs.existsSync("C:\\")) {
+            if (!fs.existsSync("C:\\")) {
+                fs.mkdirSync("C:\\.gray_log");
+            }
+            return "C:\\.gray_log";
+        }
+        if (fs.existsSync("/bin")) {
+            if (!this.graylogFilesystem.existDirectory("graylog://.graylog")) {
+                this.graylogFilesystem.createDirectory(vscode.Uri.);
+            }
+            if (!fs.existsSync("/.graylog")) {
+            }
+            return "/.graylog";
+        }
+        return "";
+    }
+}
+exports.ConnectionPart = ConnectionPart;
+//# sourceMappingURL=connectionpart.js.map
