@@ -10,6 +10,7 @@ export class ConnectionPart{
     }
 
     getDefaultWorkingDirectory():string{
+        
         if(fs.existsSync("C:\\")){
             if(!fs.existsSync("C:\\"))
             {
@@ -19,14 +20,15 @@ export class ConnectionPart{
         }
 
         if(fs.existsSync("/bin")){
-            if(!this.graylogFilesystem.existDirectory("graylog://.graylog"))
-            {
-                this.graylogFilesystem.createDirectory(vscode.Uri.);
-            }
-            if(!fs.existsSync("/.graylog"))
-            {
-            }
-            return "/.graylog";
+            this.graylogFilesystem.createDirectory(vscode.Uri.parse(`graylog:/.garylog/`));
+            this.graylogFilesystem.createDirectory(vscode.Uri.parse(`graylog:/.garylog/setting.json`));
+            this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/.garylog/setting.json`), 
+            Buffer.from(`{
+                username:'',
+                password:'',
+            }`), { create: true, overwrite: true });
+            
+            return "graylog://.graylog";
         }
         return "";
     }

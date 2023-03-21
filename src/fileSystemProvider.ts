@@ -6,289 +6,222 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
-import * as fs from 'fs';
-import * as mkdirp from 'mkdirp';
-import * as rimraf from 'rimraf';
+
+export class File implements vscode.FileStat {
+
+	type: vscode.FileType;
+	ctime: number;
+	mtime: number;
+	size: number;
+
+	name: string;
+	data?: Uint8Array;
+
+	constructor(name: string) {
+		this.type = vscode.FileType.File;
+		this.ctime = Date.now();
+		this.mtime = Date.now();
+		this.size = 0;
+		this.name = name;
+	}
+}
+
+export class Directory implements vscode.FileStat {
+
+	type: vscode.FileType;
+	ctime: number;
+	mtime: number;
+	size: number;
+
+	name: string;
+	entries: Map<string, File | Directory>;
+
+	constructor(name: string) {
+		this.type = vscode.FileType.Directory;
+		this.ctime = Date.now();
+		this.mtime = Date.now();
+		this.size = 0;
+		this.name = name;
+		this.entries = new Map();
+	}
+}
+
+export type Entry = File | Directory;
+
 export class GraylogFileSystemProvider implements vscode.FileSystemProvider {
 
-	private _onDidChangeFile: vscode.EventEmitter<vscode.FileChangeEvent[]>;
+	root = new Directory('');
 
-	constructor() {
-		this._onDidChangeFile = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
+	// --- manage file metadata
+
+	stat(uri: vscode.Uri): vscode.FileStat {
+		return this._lookup(uri, false);
 	}
 
-	get onDidChangeFile(): vscode.Event<vscode.FileChangeEvent[]> {
-		return this._onDidChangeFile.event;
-	}
-
-	watch(uri: vscode.Uri, options: { recursive: boolean; excludes: string[]; }): vscode.Disposable {
-		const watcher = fs.watch(uri.fsPath, { recursive: options.recursive }, async (event: string, filename: string | Buffer) => {
-			const filepath = path.join(uri.fsPath, _.normalizeNFC(filename.toString()));
-
-			// TODO support excludes (using minimatch library?)
-
-			this._onDidChangeFile.fire([{
-				type: event === 'change' ? vscode.FileChangeType.Changed : await _.exists(filepath) ? vscode.FileChangeType.Created : vscode.FileChangeType.Deleted,
-				uri: uri.with({ path: filepath })
-			} as vscode.FileChangeEvent]);
-		});
-
-		return { dispose: () => watcher.close() };
-	}
-
-	stat(uri: vscode.Uri): vscode.FileStat | Thenable<vscode.FileStat> {
-		return this._stat(uri.fsPath);
-	}
-
-	async _stat(path: string): Promise<vscode.FileStat> {
-		const res = await _.statLink(path);
-		return new FileStat(res.stat, res.isSymbolicLink);
-	}
-
-	readDirectory(uri: vscode.Uri): [string, vscode.FileType][] | Thenable<[string, vscode.FileType][]> {
-		return this._readDirectory(uri);
-	}
-
-	async _readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-		const children = await _.readdir(uri.fsPath);
-
+	readDirectory(uri: vscode.Uri): [string, vscode.FileType][] {
+		const entry = this._lookupAsDirectory(uri, false);
 		const result: [string, vscode.FileType][] = [];
-		for (let i = 0; i < children.length; i++) {
-			const child = children[i];
-			const stat = await this._stat(path.join(uri.fsPath, child));
-			result.push([child, stat.type]);
+		for (const [name, child] of entry.entries) {
+			result.push([name, child.type]);
+		}
+		return result;
+	}
+
+	// --- manage file contents
+
+	readFile(uri: vscode.Uri): Uint8Array {
+		const data = this._lookupAsFile(uri, false).data;
+		if (data) {
+			return data;
+		}
+		throw vscode.FileSystemError.FileNotFound();
+	}
+
+	writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean, overwrite: boolean }): void {
+		const basename = path.posix.basename(uri.path);
+		const parent = this._lookupParentDirectory(uri);
+		let entry = parent.entries.get(basename);
+		if (entry instanceof Directory) {
+			throw vscode.FileSystemError.FileIsADirectory(uri);
+		}
+		if (!entry && !options.create) {
+			throw vscode.FileSystemError.FileNotFound(uri);
+		}
+		if (entry && options.create && !options.overwrite) {
+			throw vscode.FileSystemError.FileExists(uri);
+		}
+		if (!entry) {
+			entry = new File(basename);
+			parent.entries.set(basename, entry);
+			this._fireSoon({ type: vscode.FileChangeType.Created, uri });
+		}
+		entry.mtime = Date.now();
+		entry.size = content.byteLength;
+		entry.data = content;
+
+		this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
+	}
+
+	// --- manage files/folders
+
+	rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { overwrite: boolean }): void {
+
+		if (!options.overwrite && this._lookup(newUri, true)) {
+			throw vscode.FileSystemError.FileExists(newUri);
 		}
 
-		return Promise.resolve(result);
+		const entry = this._lookup(oldUri, false);
+		const oldParent = this._lookupParentDirectory(oldUri);
+
+		const newParent = this._lookupParentDirectory(newUri);
+		const newName = path.posix.basename(newUri.path);
+
+		oldParent.entries.delete(entry.name);
+		entry.name = newName;
+		newParent.entries.set(newName, entry);
+
+		this._fireSoon(
+			{ type: vscode.FileChangeType.Deleted, uri: oldUri },
+			{ type: vscode.FileChangeType.Created, uri: newUri }
+		);
 	}
 
-	existDirectory(uri: string): Boolean | Thenable<Boolean> {
-		return _.exists(uri);
+	delete(uri: vscode.Uri): void {
+		const dirname = uri.with({ path: path.posix.dirname(uri.path) });
+		const basename = path.posix.basename(uri.path);
+		const parent = this._lookupAsDirectory(dirname, false);
+		if (!parent.entries.has(basename)) {
+			throw vscode.FileSystemError.FileNotFound(uri);
+		}
+		parent.entries.delete(basename);
+		parent.mtime = Date.now();
+		parent.size -= 1;
+		this._fireSoon({ type: vscode.FileChangeType.Changed, uri: dirname }, { uri, type: vscode.FileChangeType.Deleted });
 	}
 
-	createDirectory(uri: vscode.Uri): void | Thenable<void> {
-		return _.mkdir(uri.fsPath);
+	createDirectory(uri: vscode.Uri): void {
+		const basename = path.posix.basename(uri.path);
+		const dirname = uri.with({ path: path.posix.dirname(uri.path) });
+		const parent = this._lookupAsDirectory(dirname, false);
+
+		const entry = new Directory(basename);
+		parent.entries.set(entry.name, entry);
+		parent.mtime = Date.now();
+		parent.size += 1;
+		this._fireSoon({ type: vscode.FileChangeType.Changed, uri: dirname }, { type: vscode.FileChangeType.Created, uri });
 	}
 
-	readFile(uri: vscode.Uri): Uint8Array | Thenable<Uint8Array> {
-		return _.readfile(uri.fsPath);
-	}
+	// --- lookup
 
-	writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; }): void | Thenable<void> {
-		return this._writeFile(uri, content, options);
-	}
-
-	async _writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; }): Promise<void> {
-		const exists = await _.exists(uri.fsPath);
-		if (!exists) {
-			if (!options.create) {
-				throw vscode.FileSystemError.FileNotFound();
+	private _lookup(uri: vscode.Uri, silent: false): Entry;
+	private _lookup(uri: vscode.Uri, silent: boolean): Entry | undefined;
+	private _lookup(uri: vscode.Uri, silent: boolean): Entry | undefined {
+		const parts = uri.path.split('/');
+		let entry: Entry = this.root;
+		for (const part of parts) {
+			if (!part) {
+				continue;
 			}
-
-			await _.mkdir(path.dirname(uri.fsPath));
-		} else {
-			if (!options.overwrite) {
-				throw vscode.FileSystemError.FileExists();
+			let child: Entry | undefined;
+			if (entry instanceof Directory) {
+				child = entry.entries.get(part);
 			}
-		}
-
-		return _.writefile(uri.fsPath, content as Buffer);
-	}
-
-	delete(uri: vscode.Uri, options: { recursive: boolean; }): void | Thenable<void> {
-		if (options.recursive) {
-			return _.rmrf(uri.fsPath);
-		}
-
-		return _.unlink(uri.fsPath);
-	}
-
-	rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { overwrite: boolean; }): void | Thenable<void> {
-		return this._rename(oldUri, newUri, options);
-	}
-
-	async _rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { overwrite: boolean; }): Promise<void> {
-		const exists = await _.exists(newUri.fsPath);
-		if (exists) {
-			if (!options.overwrite) {
-				throw vscode.FileSystemError.FileExists();
-			} else {
-				await _.rmrf(newUri.fsPath);
-			}
-		}
-
-		const parentExists = await _.exists(path.dirname(newUri.fsPath));
-		if (!parentExists) {
-			await _.mkdir(path.dirname(newUri.fsPath));
-		}
-
-		return _.rename(oldUri.fsPath, newUri.fsPath);
-	}
-
-	// TODO can implement a fast copy() method with node.js 8.x new fs.copy method
-}
-
-//#region Utilities
-
-export interface IStatAndLink {
-	stat: fs.Stats;
-	isSymbolicLink: boolean;
-}
-
-namespace _ {
-
-	function handleResult<T>(resolve: (result: T) => void, reject: (error: Error) => void, error: Error | null | undefined, result: T | undefined): void {
-		if (error) {
-			reject(messageError(error));
-		} else {
-			resolve(result!);
-		}
-	}
-
-	function messageError(error: Error & { code?: string }): Error {
-		if (error.code === 'ENOENT') {
-			return vscode.FileSystemError.FileNotFound();
-		}
-
-		if (error.code === 'EISDIR') {
-			return vscode.FileSystemError.FileIsADirectory();
-		}
-
-		if (error.code === 'EEXIST') {
-			return vscode.FileSystemError.FileExists();
-		}
-
-		if (error.code === 'EPERM' || error.code === 'EACCESS') {
-			return vscode.FileSystemError.NoPermissions();
-		}
-
-		return error;
-	}
-
-	export function checkCancellation(token: vscode.CancellationToken): void {
-		if (token.isCancellationRequested) {
-			throw new Error('Operation cancelled');
-		}
-	}
-
-	export function normalizeNFC(items: string): string;
-	export function normalizeNFC(items: string[]): string[];
-	export function normalizeNFC(items: string | string[]): string | string[] {
-		if (process.platform !== 'darwin') {
-			return items;
-		}
-
-		if (Array.isArray(items)) {
-			return items.map(item => item.normalize('NFC'));
-		}
-
-		return items.normalize('NFC');
-	}
-
-	export function readdir(path: string): Promise<string[]> {
-		return new Promise<string[]>((resolve, reject) => {
-			fs.readdir(path, (error, children) => handleResult(resolve, reject, error, normalizeNFC(children)));
-		});
-	}
-
-	export function readfile(path: string): Promise<Buffer> {
-		return new Promise<Buffer>((resolve, reject) => {
-			fs.readFile(path, (error, buffer) => handleResult(resolve, reject, error, buffer));
-		});
-	}
-
-	export function writefile(path: string, content: Buffer): Promise<void> {
-		return new Promise<void>((resolve, reject) => {
-			fs.writeFile(path, content, error => handleResult(resolve, reject, error, void 0));
-		});
-	}
-
-	export function exists(path: string): Promise<boolean> {
-		return new Promise<boolean>((resolve, reject) => {
-			fs.exists(path, exists => handleResult(resolve, reject, null, exists));
-		});
-	}
-
-	export function rmrf(path: string): Promise<void> {
-		return new Promise<void>((resolve, reject) => {
-			rimraf.rimraf(path);
-		});
-	}
-
-	export function mkdir(path: string): Promise<void> {
-		return new Promise<void>((resolve, reject) => {
-			mkdirp.mkdirp(path);
-		});
-	}
-
-	export function rename(oldPath: string, newPath: string): Promise<void> {
-		return new Promise<void>((resolve, reject) => {
-			fs.rename(oldPath, newPath, error => handleResult(resolve, reject, error, void 0));
-		});
-	}
-
-	export function unlink(path: string): Promise<void> {
-		return new Promise<void>((resolve, reject) => {
-			fs.unlink(path, error => handleResult(resolve, reject, error, void 0));
-		});
-	}
-
-	export function statLink(path: string): Promise<IStatAndLink> {
-		return new Promise<IStatAndLink>((resolve, reject) => {
-			fs.lstat(path, (error, lstat) => {
-				if (error || lstat.isSymbolicLink()) {
-					fs.stat(path, (error, stat) => {
-						if (error) {
-							return handleResult(resolve, reject, error, void 0);
-						}
-
-						handleResult(resolve, reject, error, { stat, isSymbolicLink: lstat && lstat.isSymbolicLink() });
-					});
+			if (!child) {
+				if (!silent) {
+					throw vscode.FileSystemError.FileNotFound(uri);
 				} else {
-					handleResult(resolve, reject, error, { stat: lstat, isSymbolicLink: false });
+					return undefined;
 				}
-			});
-
-		});
+			}
+			entry = child;
+		}
+		return entry;
 	}
-}
 
-export class FileStat implements vscode.FileStat {
+	private _lookupAsDirectory(uri: vscode.Uri, silent: boolean): Directory {
+		const entry = this._lookup(uri, silent);
+		if (entry instanceof Directory) {
+			return entry;
+		}
+		throw vscode.FileSystemError.FileNotADirectory(uri);
+	}
 
-	constructor(private fsStat: fs.Stats, private _isSymbolicLink: boolean) { }
+	private _lookupAsFile(uri: vscode.Uri, silent: boolean): File {
+		const entry = this._lookup(uri, silent);
+		if (entry instanceof File) {
+			return entry;
+		}
+		throw vscode.FileSystemError.FileIsADirectory(uri);
+	}
 
-	get type(): vscode.FileType {
-		let type: number;
-		if (this._isSymbolicLink) {
-			type = vscode.FileType.SymbolicLink | (this.fsStat.isDirectory() ? vscode.FileType.Directory : vscode.FileType.File);
-		} else {
-			type = this.fsStat.isFile() ? vscode.FileType.File : this.fsStat.isDirectory() ? vscode.FileType.Directory : vscode.FileType.Unknown;
+	private _lookupParentDirectory(uri: vscode.Uri): Directory {
+		const dirname = uri.with({ path: path.posix.dirname(uri.path) });
+		return this._lookupAsDirectory(dirname, false);
+	}
+
+	// --- manage file events
+
+	private _emitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
+	private _bufferedEvents: vscode.FileChangeEvent[] = [];
+	private _fireSoonHandle?: NodeJS.Timer;
+
+	readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
+
+	watch(_resource: vscode.Uri): vscode.Disposable {
+		// ignore, fires for all changes...
+		return new vscode.Disposable(() => { });
+	}
+
+	private _fireSoon(...events: vscode.FileChangeEvent[]): void {
+		this._bufferedEvents.push(...events);
+
+		if (this._fireSoonHandle) {
+			clearTimeout(this._fireSoonHandle);
 		}
 
-		return type;
-	}
-
-	get isFile(): boolean | undefined {
-		return this.fsStat.isFile();
-	}
-
-	get isDirectory(): boolean | undefined {
-		return this.fsStat.isDirectory();
-	}
-
-	get isSymbolicLink(): boolean | undefined {
-		return this._isSymbolicLink;
-	}
-
-	get size(): number {
-		return this.fsStat.size;
-	}
-
-	get ctime(): number {
-		return this.fsStat.ctime.getTime();
-	}
-
-	get mtime(): number {
-		return this.fsStat.mtime.getTime();
+		this._fireSoonHandle = setTimeout(() => {
+			this._emitter.fire(this._bufferedEvents);
+			this._bufferedEvents.length = 0;
+		}, 5);
 	}
 }

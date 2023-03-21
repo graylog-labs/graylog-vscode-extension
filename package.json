@@ -37,6 +37,34 @@
     },
     "commands": [
       {
+				"command": "graylog.workspaceInit",
+				"title": "Setup Workspace",
+				"category": "Graylog"
+			},
+			{
+				"command": "graylog.init",
+				"title": "Create Files",
+				"category": "Graylog"
+			},
+			{
+				"command": "graylog.reset",
+				"title": "Delete Files",
+				"category": "Graylog"
+			},
+			{
+				"command": "graylog.deleteFile",
+				"title": "Delete \"file.txt\"",
+				"category": "Graylog"
+			},
+			{
+				"command": "graylog.addFile",
+				"title": "Add \"file.txt\"",
+				"category": "Graylog"
+			},
+
+
+
+      {
         "command": "nodeDependencies.refreshEntry",
         "title": "Refresh",
         "icon": {
@@ -78,6 +106,28 @@
       }
     ],
     "menus": {
+      "commandPalette": [
+				{
+					"command": "graylog.init",
+					"when": "workbenchState == workspace"
+				},
+				{
+					"command": "graylog.reset",
+					"when": "workbenchState == workspace"
+				},
+				{
+					"command": "graylog.deleteFile",
+					"when": "workbenchState == workspace"
+				},
+				{
+					"command": "graylog.addFile",
+					"when": "workbenchState == workspace"
+				},
+				{
+					"command": "graylog.workspaceInit",
+					"when": "workbenchState != workspace"
+				}
+			],
       "view/title": [
         {
           "command": "nodeDependencies.refreshEntry",
