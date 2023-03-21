@@ -2,10 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.activate = void 0;
 const vscode = require("vscode");
+const connectionpart_1 = require("./connectionpart");
 const fileSystemProvider_1 = require("./fileSystemProvider");
 function activate(context) {
     console.log('graylog says "Hello"');
     const Graylog = new fileSystemProvider_1.GraylogFileSystemProvider();
+    const connectpart = new connectionpart_1.ConnectionPart(Graylog);
     context.subscriptions.push(vscode.workspace.registerFileSystemProvider('graylog', Graylog, { isCaseSensitive: true }));
     let initialized = false;
     context.subscriptions.push(vscode.commands.registerCommand('graylog.reset', _ => {
@@ -15,23 +17,21 @@ function activate(context) {
         initialized = false;
     }));
     context.subscriptions.push(vscode.commands.registerCommand('graylog.addFile', _ => {
-        if (initialized) {
-            Graylog.writeFile(vscode.Uri.parse(`graylog:/file.txt`), Buffer.from('foo'), { create: true, overwrite: true });
-        }
+        Graylog.writeFile(vscode.Uri.parse(`graylog:/file.txt`), Buffer.from('foo'), { create: true, overwrite: true });
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('graylog.deleteFile', _ => {
+    context.subscriptions.push((vscode.commands.registerCommand('graylog.deleteFile', _ => {
         if (initialized) {
             Graylog.delete(vscode.Uri.parse('graylog:/file.txt'));
         }
-    }));
+    })));
     context.subscriptions.push(vscode.commands.registerCommand('graylog.init', _ => {
         if (initialized) {
             return;
         }
         initialized = true;
         // most common files types
-        Graylog.writeFile(vscode.Uri.parse(`file:/file.txt`), Buffer.from('foo'), { create: true, overwrite: true });
-        Graylog.writeFile(vscode.Uri.parse(`file:/file.html`), Buffer.from('<html><body><h1 class="hd">Hello</h1></body></html>'), { create: true, overwrite: true });
+        Graylog.writeFile(vscode.Uri.parse(`graylog:/file.txt`), Buffer.from('foo'), { create: true, overwrite: true });
+        Graylog.writeFile(vscode.Uri.parse(`graylog:/file.html`), Buffer.from('<html><body><h1 class="hd">Hello</h1></body></html>'), { create: true, overwrite: true });
         Graylog.writeFile(vscode.Uri.parse(`graylog:/file.js`), Buffer.from('console.log("JavaScript")'), { create: true, overwrite: true });
         Graylog.writeFile(vscode.Uri.parse(`graylog:/file.json`), Buffer.from('{ "json": true }'), { create: true, overwrite: true });
         Graylog.writeFile(vscode.Uri.parse(`graylog:/file.ts`), Buffer.from('console.log("TypeScript")'), { create: true, overwrite: true });
@@ -56,8 +56,58 @@ function activate(context) {
         Graylog.writeFile(vscode.Uri.parse(`graylog:/xyz/def/foo.md`), Buffer.from('*graylog*'), { create: true, overwrite: true });
         Graylog.writeFile(vscode.Uri.parse(`graylog:/xyz/def/foo.bin`), Buffer.from([0, 0, 0, 1, 7, 0, 0, 1, 1]), { create: true, overwrite: true });
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('graylog.workspaceInit', _ => {
+    context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(e => {
+        let a = "1";
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('graylog.workspaceInit', async () => {
+        let apiurl = "";
+        let username = "";
+        let password = "";
+        do {
+            if (apiurl.length == 0)
+                apiurl = await vscode.window.showInputBox({
+                    placeHolder: 'Please type Graylog API Url',
+                    ignoreFocusOut: true
+                }) ?? "";
+            if (!(await connectpart.testAPI(apiurl))) {
+                vscode.window.showErrorMessage("API url is not valid.");
+                apiurl = "";
+                continue;
+            }
+            if (username == "")
+                username = await vscode.window.showInputBox({
+                    placeHolder: 'Plz type the username',
+                    ignoreFocusOut: true
+                }) ?? "";
+            if (username == "") {
+                vscode.window.showErrorMessage("Username cannot be empty");
+                continue;
+            }
+            if (password == "")
+                password = await vscode.window.showInputBox({
+                    placeHolder: 'Plz type the password',
+                    ignoreFocusOut: true,
+                    password: true
+                }) ?? "";
+            if (password == "") {
+                vscode.window.showErrorMessage("Password cannot be empty.");
+                continue;
+            }
+            if (!await connectpart.testUserInfo(apiurl, username, password)) {
+                vscode.window.showErrorMessage("User Info is not valid");
+                username = "";
+                password = "";
+                continue;
+            }
+            break;
+        } while (true);
         vscode.workspace.updateWorkspaceFolders(0, 0, { uri: vscode.Uri.parse('graylog:/'), name: "Graylog API" });
+        setTimeout(() => {
+            Graylog.createDirectory(vscode.Uri.parse(`graylog:/folder/`));
+            Graylog.createDirectory(vscode.Uri.parse(`graylog:/large/`));
+            Graylog.createDirectory(vscode.Uri.parse(`graylog:/xyz/`));
+            Graylog.createDirectory(vscode.Uri.parse(`graylog:/xyz/abc`));
+        }, 5000);
     }));
 }
 exports.activate = activate;
