@@ -8,6 +8,8 @@ const colorData = require('../themes/color');
 function activate(context) {
     const Graylog = new fileSystemProvider_1.GraylogFileSystemProvider();
     const connectpart = new connectionpart_1.ConnectionPart(Graylog, context.secrets);
+    //	const codelensProvider = new CodelensProvider(connectpart);
+    //	vscode.languages.registerCodeLensProvider("*",codelensProvider);
     context.subscriptions.push(vscode.workspace.registerFileSystemProvider('graylog', Graylog, { isCaseSensitive: true }));
     let initialized = false;
     context.subscriptions.push(vscode.commands.registerCommand('graylog.workspaceInit', async () => {

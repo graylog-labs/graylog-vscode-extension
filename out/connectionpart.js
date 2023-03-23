@@ -11,6 +11,7 @@ class ConnectionPart {
         this.accountUserName = "";
         this.accountPassword = "";
         this.workingDirectory = "";
+        this.errors = [];
         //     this.workingDirectory = this.getDefaultWorkingDirectory();
     }
     async onDidChange(document) {
@@ -32,23 +33,21 @@ class ConnectionPart {
                     password: this.accountPassword
                 }
             });
-            console.log(response);
         }
         catch (e) {
-            if (response?.data) {
-                response.data.map((edata) => {
+            if (e.response?.data) {
+                e.response.data.map((edata) => {
                     let tempdata = {
                         type: edata['type'],
                         line: edata['line'],
                         reason: edata['reason'],
-                        position_in_lines: edata['position_in_lines']
+                        position_in_line: edata['position_in_line']
                     };
                     result.push(tempdata);
                 });
             }
-            console.log(e);
         }
-        return result;
+        this.errors = result;
     }
     async GetRuleSource(id) {
         try {

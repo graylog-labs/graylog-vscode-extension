@@ -8,12 +8,14 @@ export class ConnectionPart{
     public accountUserName = "";
     public accountPassword = "";
     public workingDirectory="";
+
+    public errors:sourceError[]=[];
     constructor(private graylogFilesystem: GraylogFileSystemProvider,private readonly secretStorage:vscode.SecretStorage){
    //     this.workingDirectory = this.getDefaultWorkingDirectory();
     }
 
 
-    public async onDidChange(document:vscode.TextDocument):Promise<sourceError[]>{
+    public async onDidChange(document:vscode.TextDocument){
       let id= document.fileName.replace('/','').split('.')[0];
       let rulesource =await this.GetRuleSource(id);
       rulesource['source']=document.getText();
@@ -38,23 +40,21 @@ export class ConnectionPart{
             }
           }
         );
-        console.log(response);
       }catch(e){
-        if(response?.data){
+        if(e.response?.data){
         
-          response.data.map((edata:any)=>{
+          e.response.data.map((edata:any)=>{
             let tempdata:sourceError ={
               type: edata['type'],
               line: edata['line'],
               reason:edata['reason'],
-              position_in_lines: edata['position_in_lines']
+              position_in_line: edata['position_in_line']
             };
             result.push(tempdata);
           });          
         }
-        console.log(e);
       }
-      return result;
+      this.errors = result;
     }
 
     public async GetRuleSource(id:string){
@@ -237,7 +237,7 @@ export class ConnectionPart{
 
 export interface sourceError{
   line: number,
-  position_in_lines: number,
+  position_in_line: number,
   reason: string,
   type: string
 }

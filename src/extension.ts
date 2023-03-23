@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 import { DepNodeProvider, Item } from './nodeDependencies';
 import { ConnectionPart } from './connectionpart';
 import {GraylogFileSystemProvider} from './fileSystemProvider';
-
+import { CodelensProvider } from './CodelensProvider';
 const colorData = require('../themes/color');
 
 
@@ -17,6 +17,10 @@ export function activate(context: vscode.ExtensionContext) {
 	
 	const connectpart= new ConnectionPart(Graylog,context.secrets);
 
+//	const codelensProvider = new CodelensProvider(connectpart);
+
+//	vscode.languages.registerCodeLensProvider("*",codelensProvider);
+	
 	context.subscriptions.push(vscode.workspace.registerFileSystemProvider('graylog', Graylog, { isCaseSensitive: true }));
 	let initialized = false;
 
