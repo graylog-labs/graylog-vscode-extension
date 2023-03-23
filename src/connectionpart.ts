@@ -15,21 +15,48 @@ export class ConnectionPart{
 
     public async onDidChange(document:vscode.TextDocument){
       let id= document.fileName.replace('/','').split('.')[0];
-      const response = await axios.put(
-        `${this.apiUrl}/api/system/pipelines/rule/${id}`
-        ,{rule:document.getText(),id:id},
-        {
+      let rulesource =await this.GetRuleSource(id);
+      rulesource['source']=document.getText();
+      delete rulesource['errors'];
+      try{
+        const response = await axios.put(
+          `${this.apiUrl}/api/system/pipelines/rule/${id}`
+          ,rulesource,
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+              'X-Requested-By':this.accountUserName
+            },
+            auth: {
+              username: this.accountUserName,
+              password: this.accountPassword
+            }
+          }
+        );
+        console.log(response);
+      }catch(e){
+
+        console.log(e);
+      }
+      
+    }
+
+    public async GetRuleSource(id:string){
+      try{
+        const response = await axios.get(`${this.apiUrl}/api/system/pipelines/rule/${id}`, {
           headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/x-www-form-urlencoded'
+            'Accept': 'application/json'
           },
           auth: {
             username: this.accountUserName,
             password: this.accountPassword
           }
-        }
-      );
-      console.log(response);
+        });
+
+        return response.data;
+      }catch(e){
+      }
     }
     public async LoginInitialize(){
       let initapiurl:string = "";
@@ -190,6 +217,12 @@ export class ConnectionPart{
       return [];
     }
     initializeDirectories(){
-
     }
+}
+
+export interface sourceError{
+  line: number,
+  position_in_lines: number,
+  reason: string,
+  type: string
 }

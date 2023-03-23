@@ -15,17 +15,42 @@ class ConnectionPart {
     }
     async onDidChange(document) {
         let id = document.fileName.replace('/', '').split('.')[0];
-        const response = await axios_1.default.put(`${this.apiUrl}/api/system/pipelines/rule/${id}`, { rule: document.getText(), id: id }, {
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            auth: {
-                username: this.accountUserName,
-                password: this.accountPassword
-            }
-        });
-        console.log(response);
+        let rulesource = await this.GetRuleSource(id);
+        rulesource['source'] = document.getText();
+        delete rulesource['errors'];
+        try {
+            const response = await axios_1.default.put(`${this.apiUrl}/api/system/pipelines/rule/${id}`, rulesource, {
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-By': this.accountUserName
+                },
+                auth: {
+                    username: this.accountUserName,
+                    password: this.accountPassword
+                }
+            });
+            console.log(response);
+        }
+        catch (e) {
+            console.log(e);
+        }
+    }
+    async GetRuleSource(id) {
+        try {
+            const response = await axios_1.default.get(`${this.apiUrl}/api/system/pipelines/rule/${id}`, {
+                headers: {
+                    'Accept': 'application/json'
+                },
+                auth: {
+                    username: this.accountUserName,
+                    password: this.accountPassword
+                }
+            });
+            return response.data;
+        }
+        catch (e) {
+        }
     }
     async LoginInitialize() {
         let initapiurl = "";
