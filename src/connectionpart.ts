@@ -13,13 +13,17 @@ export class ConnectionPart{
     }
 
 
-    public async onDidChange(document:vscode.TextDocument){
+    public async onDidChange(document:vscode.TextDocument):Promise<sourceError[]>{
       let id= document.fileName.replace('/','').split('.')[0];
       let rulesource =await this.GetRuleSource(id);
       rulesource['source']=document.getText();
       delete rulesource['errors'];
+
+      let response; 
+
+      let result:sourceError[] =[];
       try{
-        const response = await axios.put(
+        response = await axios.put(
           `${this.apiUrl}/api/system/pipelines/rule/${id}`
           ,rulesource,
           {
@@ -36,10 +40,21 @@ export class ConnectionPart{
         );
         console.log(response);
       }catch(e){
-
+        if(response?.data){
+        
+          response.data.map((edata:any)=>{
+            let tempdata:sourceError ={
+              type: edata['type'],
+              line: edata['line'],
+              reason:edata['reason'],
+              position_in_lines: edata['position_in_lines']
+            };
+            result.push(tempdata);
+          });          
+        }
         console.log(e);
       }
-      
+      return result;
     }
 
     public async GetRuleSource(id:string){
