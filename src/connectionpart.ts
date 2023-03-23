@@ -1,6 +1,12 @@
 import * as vscode from 'vscode';
 import { GraylogFileSystemProvider } from './fileSystemProvider';
 import axios from 'axios';
+
+const BASE_PATH = `${vscode?.extensions?.getExtension('pdragon.task-graylog')?.extensionPath}/resources/`;
+const ICON_PATH='error-inverse.svg';
+
+const icon = vscode.window.createTextEditorDecorationType({gutterIconPath:`${BASE_PATH}${ICON_PATH}`,gutterIconSize:'80%'});
+
 export class ConnectionPart{
 
 
@@ -54,7 +60,20 @@ export class ConnectionPart{
           });          
         }
       }
+
+
       this.errors = result;
+
+      let ranges:vscode.Range[]=[];
+      result.map((oneresult)=>{
+        let line = oneresult.line-1;
+        let indexOf = oneresult.position_in_line;
+        let position = new vscode.Position(line, indexOf); 
+        let range = document.getWordRangeAtPosition(position);
+        if(range) 
+          ranges.push(range);
+      });
+      vscode.window.activeTextEditor?.setDecorations(icon,ranges);
     }
 
     public async GetRuleSource(id:string){
