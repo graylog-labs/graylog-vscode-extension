@@ -11,8 +11,7 @@
   ],
   "activationEvents": [
     "onLanguage:json",
-    "onLanguage:jsonc",
-    "onFileSystem:graylog"
+    "onLanguage:jsonc"
   ],
   "main": "./out/extension.js",
   "contributes": {
