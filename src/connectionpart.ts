@@ -68,7 +68,7 @@ export class ConnectionPart{
       result.map((oneresult)=>{
         let line = oneresult.line-1;
         let indexOf = oneresult.position_in_line;
-        let position = new vscode.Position(line, indexOf); 
+        let position = new vscode.Position(line, indexOf +1 ); 
         let range = document.getWordRangeAtPosition(position);
         if(range) 
           ranges.push(range);
