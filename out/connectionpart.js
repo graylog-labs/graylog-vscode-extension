@@ -13,6 +13,20 @@ class ConnectionPart {
         this.workingDirectory = "";
         //     this.workingDirectory = this.getDefaultWorkingDirectory();
     }
+    async onDidChange(document) {
+        let id = document.fileName.replace('/', '').split('.')[0];
+        const response = await axios_1.default.put(`${this.apiUrl}/api/system/pipelines/rule/${id}`, { rule: document.getText(), id: id }, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            auth: {
+                username: this.accountUserName,
+                password: this.accountPassword
+            }
+        });
+        console.log(response);
+    }
     async LoginInitialize() {
         let initapiurl = "";
         let initusername = "";
@@ -21,7 +35,8 @@ class ConnectionPart {
             if (initapiurl.length == 0)
                 initapiurl = await vscode.window.showInputBox({
                     placeHolder: 'Please type Graylog API Url',
-                    ignoreFocusOut: true
+                    ignoreFocusOut: true,
+                    prompt: 'Type your api url (http://10.10.10.10)'
                 }) ?? "";
             if (!(await this.testAPI(initapiurl))) {
                 vscode.window.showErrorMessage("API url is not valid.");
@@ -34,7 +49,8 @@ class ConnectionPart {
             if (initusername == "")
                 initusername = await vscode.window.showInputBox({
                     placeHolder: 'Plz type the username',
-                    ignoreFocusOut: true
+                    ignoreFocusOut: true,
+                    prompt: 'plz type your graylog username'
                 }) ?? "";
             if (initusername == "") {
                 vscode.window.showErrorMessage("Username cannot be empty");
@@ -44,6 +60,7 @@ class ConnectionPart {
                 initpassword = await vscode.window.showInputBox({
                     placeHolder: 'Plz type the password',
                     ignoreFocusOut: true,
+                    prompt: 'plz type your graylog password',
                     password: true
                 }) ?? "";
             if (initpassword == "") {
@@ -133,7 +150,7 @@ class ConnectionPart {
     async prepareForwork() {
         let rules = await this.GetAllRules();
         rules.map((rule) => {
-            this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/${rule['title']}.grule`), Buffer.from(rule['source']), { create: true, overwrite: true });
+            this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/${rule['id']}.grule`), Buffer.from(rule['source']), { create: true, overwrite: true });
         });
     }
     async GetAllRules() {

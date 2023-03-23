@@ -30,6 +30,12 @@ export function activate(context: vscode.ExtensionContext) {
 	{
 		connectpart.prepareForwork();
 	}
+
+	vscode.workspace.onDidChangeTextDocument((e)=>{
+		if(connectpart.accountUserName!="")
+			connectpart.onDidChange(e.document);
+	});
+
 }
 
 /*

@@ -16,6 +16,10 @@ function activate(context) {
     if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0 && vscode.workspace.workspaceFolders[0].name == 'Graylog API') {
         connectpart.prepareForwork();
     }
+    vscode.workspace.onDidChangeTextDocument((e) => {
+        if (connectpart.accountUserName != "")
+            connectpart.onDidChange(e.document);
+    });
 }
 exports.activate = activate;
 //# sourceMappingURL=extension.js.map
