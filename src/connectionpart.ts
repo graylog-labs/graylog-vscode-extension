@@ -1,9 +1,6 @@
 import * as vscode from 'vscode';
-import * as fs from 'fs';
-import * as path from 'path';
 import { GraylogFileSystemProvider } from './fileSystemProvider';
 import axios from 'axios';
-import { json } from 'stream/consumers';
 export class ConnectionPart{
 
 
@@ -11,7 +8,7 @@ export class ConnectionPart{
     public accountUserName = "";
     public accountPassword = "";
     public workingDirectory="";
-    constructor(private graylogFilesystem: GraylogFileSystemProvider){
+    constructor(private graylogFilesystem: GraylogFileSystemProvider,private readonly secretStorage:vscode.SecretStorage){
    //     this.workingDirectory = this.getDefaultWorkingDirectory();
     }
 
@@ -34,6 +31,9 @@ export class ConnectionPart{
             vscode.window.showErrorMessage("API url is not valid.");
             initapiurl = "";
             continue;
+          }
+          if(initapiurl.substring(initapiurl.length-1) == "/" || initapiurl.substring(initapiurl.length-1) == "\\"){
+            initapiurl = initapiurl.substring(0,initapiurl.length-1);
           }
           if(initusername =="")
             initusername = await vscode.window.showInputBox({
@@ -68,19 +68,25 @@ export class ConnectionPart{
           this.accountPassword = initpassword;
           this.accountUserName = initusername;
           if(initapiurl.includes("/api")){
-            this.apiUrl = initapiurl.substring(0,initapiurl.indexOf("/api")-1)
+            this.apiUrl = initapiurl.substring(0,initapiurl.indexOf("/api"))
           }else{
             this.apiUrl = initapiurl;
           }
+
+          await this.secretStorage.store("grayloguser",this.accountPassword);
+          await this.secretStorage.store("graylogpassword",this.accountUserName);
+          await this.secretStorage.store("graylogurl",this.apiUrl);
           break;
         }while(true);
 
-        
-
         vscode.workspace.updateWorkspaceFolders(0, 0, { uri: vscode.Uri.parse('graylog:/'), name: "Graylog API" });
-
     }
 
+    public async restoreUserInfo(){
+      this.accountPassword = await this.secretStorage.get("graylogpassword")??"";
+      this.accountUserName = await this.secretStorage.get("grayloguser")??"";
+      this.apiUrl = await this.secretStorage.get("graylogurl")??"";
+    }
     public  async testAPI(apiPath:string):Promise<boolean>{
         try{
             const res  = await axios.get(apiPath);
@@ -138,20 +144,29 @@ export class ConnectionPart{
     }
 
 
-    public async GetAllRules(){
+    public async prepareForwork(){
+      let rules =await this.GetAllRules();
+      rules.map((rule)=>{
+        this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/${rule['title']}.grule`), Buffer.from(rule['source']), { create: true, overwrite: true });
+      });
+    }
+    public async GetAllRules():Promise<[]>{
+      await this.restoreUserInfo();
       try{
-        const response = await axios.get('/api/system/pipelines/rule', {
+        const response = await axios.get(`${this.apiUrl}/api/system/pipelines/rule`, {
           headers: {
             'Accept': 'application/json'
           },
           auth: {
-            username: 'admin',
-            password: 'admin'
+            username: this.accountUserName,
+            password: this.accountPassword
           }
         });
+
+        return response.data;
       }catch(e){
-          return false;
       }
+      return [];
     }
     initializeDirectories(){
 

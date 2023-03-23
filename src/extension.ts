@@ -5,13 +5,17 @@ import * as vscode from 'vscode';
 import { DepNodeProvider, Item } from './nodeDependencies';
 import { ConnectionPart } from './connectionpart';
 import {GraylogFileSystemProvider} from './fileSystemProvider';
+
+const colorData = require('../themes/color');
+
+
+
 export function activate(context: vscode.ExtensionContext) {
 
-	console.log('graylog says "Hello"');
 
 	const Graylog = new GraylogFileSystemProvider();
 	
-	const connectpart= new ConnectionPart(Graylog);
+	const connectpart= new ConnectionPart(Graylog,context.secrets);
 
 	context.subscriptions.push(vscode.workspace.registerFileSystemProvider('graylog', Graylog, { isCaseSensitive: true }));
 	let initialized = false;
@@ -21,45 +25,54 @@ export function activate(context: vscode.ExtensionContext) {
 		
 		await connectpart.LoginInitialize();
 	}));
-	
-	
-
-	context.subscriptions.push(vscode.commands.registerCommand('graylog.reset', _ => {
-		for (const [name] of Graylog.readDirectory(vscode.Uri.parse('graylog:/'))) {
-			Graylog.delete(vscode.Uri.parse(`graylog:/${name}`));
-		}
-		initialized = false;
-	}));
-
-	context.subscriptions.push(vscode.commands.registerCommand('graylog.addFile', _ => {
-			Graylog.writeFile(vscode.Uri.parse(`graylog:/file.txt`), Buffer.from('foo'), { create: true, overwrite: true });
-	}));
-
-	context.subscriptions.push((vscode.commands.registerCommand('graylog.deleteFile', _ => {
-		if (initialized) {
-			Graylog.delete(vscode.Uri.parse('graylog:/file.txt'));
-		}
-	})));
-
-	context.subscriptions.push(vscode.commands.registerCommand('graylog.init', _ => {
-		if (initialized) {
-			return;
-		}
-		initialized = true;
-
-		Graylog.writeFile(vscode.Uri.parse(`graylog:/file.txt`), Buffer.from('foo'), { create: true, overwrite: true });
-		Graylog.writeFile(vscode.Uri.parse(`graylog:/file.html`), Buffer.from('<html><body><h1 class="hd">Hello</h1></body></html>'), { create: true, overwrite: true });
-	}));
-
 
 	if(vscode.workspace.workspaceFolders &&  vscode.workspace.workspaceFolders.length >0 && vscode.workspace.workspaceFolders[0].name == 'Graylog API')
 	{
-		
-		Graylog.writeFile(vscode.Uri.parse(`graylog:/file.txt`), Buffer.from('foo'), { create: true, overwrite: true });
-        Graylog.writeFile(vscode.Uri.parse(`graylog:/file.html`), Buffer.from('<html><body><h1 class="hd">Hello</h1></body></html>'), { create: true, overwrite: true });
+		connectpart.prepareForwork();
 	}
 }
 
+/*
+
+function addColorSettings() {
+	(async () => {
+		const config = vscode.workspace.getConfiguration() ;
+		let tokenColorCustomizations = config.inspect('editor.tokenColorCustomizations')?.globalValue
+
+		if (!tokenColorCustomizations) {
+			tokenColorCustomizations = {};
+		}
+		if (!Object.hasOwnProperty.call(tokenColorCustomizations, 'textMateRules')) {
+			tokenColorCustomizations['textMateRules'] = [];
+		}
+
+		const tokenColor = tokenColorCustomizations['textMateRules'];
+		const colorDataLength = colorData.length;
+		const tokenColorLength = tokenColor.length;
+
+		for (let i = 0; i < colorDataLength; i++) {
+			const name = colorData[i].name;
+
+			let exist = false;
+			for (let j = 0; j < tokenColorLength; j++) {
+				if (tokenColor[j].name === name) {
+					exist = true;
+					break;
+				}
+			}
+
+			if (!exist) {
+				tokenColor.push(colorData[i]);
+			}
+		}
+
+		await config.update(
+			'editor.tokenColorCustomizations',
+			tokenColorCustomizations,
+			vscode.ConfigurationTarget.Global,
+		);
+	})();
+}
 
 /*
 export function activate(context: vscode.ExtensionContext) {

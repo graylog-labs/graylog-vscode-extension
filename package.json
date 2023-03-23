@@ -10,9 +10,8 @@
     "Other"
   ],
   "activationEvents": [
-    "onLanguage:json",
-    "onLanguage:jsonc"
-  ],
+		"onLanguage:grule"
+	],
   "main": "./out/extension.js",
   "contributes": {
     "viewsContainers": {
@@ -38,26 +37,6 @@
       {
         "command": "graylog.workspaceInit",
         "title": "Setup Workspace",
-        "category": "Graylog"
-      },
-      {
-        "command": "graylog.init",
-        "title": "Create Files",
-        "category": "Graylog"
-      },
-      {
-        "command": "graylog.reset",
-        "title": "Delete Files",
-        "category": "Graylog"
-      },
-      {
-        "command": "graylog.deleteFile",
-        "title": "Delete \"file.txt\"",
-        "category": "Graylog"
-      },
-      {
-        "command": "graylog.addFile",
-        "title": "Add \"file.txt\"",
         "category": "Graylog"
       },
       {
@@ -125,17 +104,35 @@
         }
       ]
     },
-    "configuration": [
-      {
-        "title": "JSON Outline",
-        "properties": {
-          "jsonOutline.autorefresh": {
-            "type": "boolean",
-            "default": false
-          }
-        }
-      }
-    ]
+    "languages": [
+			{
+				"id": "grule",
+        "icon":{
+          "light":"./resources/icons8-earth-64.png",
+          "dark":"./resources/icons8-earth-64.png"
+        },
+				"aliases": [
+					"grule"
+				],
+				"extensions": [
+					".grule"
+				],
+				"configuration": "./language-configuration.json"
+			}
+		],
+		"grammars": [
+			{
+				"language": "grule",
+				"scopeName": "source.grule",
+				"path": "./syntaxes/grule.tmLanguage.json"
+			}
+		],
+		"snippets": [
+			{
+				"language": "grule",
+				"path": "./snippets/grule.code-snippets"
+			}
+		]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

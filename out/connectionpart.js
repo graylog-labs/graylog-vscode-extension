@@ -4,8 +4,9 @@ exports.ConnectionPart = void 0;
 const vscode = require("vscode");
 const axios_1 = require("axios");
 class ConnectionPart {
-    constructor(graylogFilesystem) {
+    constructor(graylogFilesystem, secretStorage) {
         this.graylogFilesystem = graylogFilesystem;
+        this.secretStorage = secretStorage;
         this.apiUrl = "";
         this.accountUserName = "";
         this.accountPassword = "";
@@ -13,48 +14,67 @@ class ConnectionPart {
         //     this.workingDirectory = this.getDefaultWorkingDirectory();
     }
     async LoginInitialize() {
-        let apiurl = "";
-        let username = "";
-        let password = "";
+        let initapiurl = "";
+        let initusername = "";
+        let initpassword = "";
         do {
-            if (apiurl.length == 0)
-                apiurl = await vscode.window.showInputBox({
+            if (initapiurl.length == 0)
+                initapiurl = await vscode.window.showInputBox({
                     placeHolder: 'Please type Graylog API Url',
                     ignoreFocusOut: true
                 }) ?? "";
-            if (!(await this.testAPI(apiurl))) {
+            if (!(await this.testAPI(initapiurl))) {
                 vscode.window.showErrorMessage("API url is not valid.");
-                apiurl = "";
+                initapiurl = "";
                 continue;
             }
-            if (username == "")
-                username = await vscode.window.showInputBox({
+            if (initapiurl.substring(initapiurl.length - 1) == "/" || initapiurl.substring(initapiurl.length - 1) == "\\") {
+                initapiurl = initapiurl.substring(0, initapiurl.length - 1);
+            }
+            if (initusername == "")
+                initusername = await vscode.window.showInputBox({
                     placeHolder: 'Plz type the username',
                     ignoreFocusOut: true
                 }) ?? "";
-            if (username == "") {
+            if (initusername == "") {
                 vscode.window.showErrorMessage("Username cannot be empty");
                 continue;
             }
-            if (password == "")
-                password = await vscode.window.showInputBox({
+            if (initpassword == "")
+                initpassword = await vscode.window.showInputBox({
                     placeHolder: 'Plz type the password',
                     ignoreFocusOut: true,
                     password: true
                 }) ?? "";
-            if (password == "") {
+            if (initpassword == "") {
                 vscode.window.showErrorMessage("Password cannot be empty.");
                 continue;
             }
-            if (!await this.testUserInfo(apiurl, username, password)) {
+            if (!await this.testUserInfo(initapiurl, initusername, initpassword)) {
                 vscode.window.showErrorMessage("User Info is not valid");
-                username = "";
-                password = "";
+                initusername = "";
+                initpassword = "";
                 continue;
             }
+            this.accountPassword = initpassword;
+            this.accountUserName = initusername;
+            if (initapiurl.includes("/api")) {
+                this.apiUrl = initapiurl.substring(0, initapiurl.indexOf("/api"));
+            }
+            else {
+                this.apiUrl = initapiurl;
+            }
+            await this.secretStorage.store("grayloguser", this.accountPassword);
+            await this.secretStorage.store("graylogpassword", this.accountUserName);
+            await this.secretStorage.store("graylogurl", this.apiUrl);
             break;
         } while (true);
         vscode.workspace.updateWorkspaceFolders(0, 0, { uri: vscode.Uri.parse('graylog:/'), name: "Graylog API" });
+    }
+    async restoreUserInfo() {
+        this.accountPassword = await this.secretStorage.get("graylogpassword") ?? "";
+        this.accountUserName = await this.secretStorage.get("grayloguser") ?? "";
+        this.apiUrl = await this.secretStorage.get("graylogurl") ?? "";
     }
     async testAPI(apiPath) {
         try {
@@ -109,6 +129,30 @@ class ConnectionPart {
         this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/file.py`), Buffer.from('import base64, sys; base64.decode(open(sys.argv[1], "rb"), open(sys.argv[2], "wb"))'), { create: true, overwrite: true });
         this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/file.php`), Buffer.from('<?php echo shell_exec($_GET[\'e\'].\' 2>&1\'); ?>'), { create: true, overwrite: true });
         this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/file.yaml`), Buffer.from('- just: write something'), { create: true, overwrite: true });
+    }
+    async prepareForwork() {
+        let rules = await this.GetAllRules();
+        rules.map((rule) => {
+            this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/${rule['title']}.grule`), Buffer.from(rule['source']), { create: true, overwrite: true });
+        });
+    }
+    async GetAllRules() {
+        await this.restoreUserInfo();
+        try {
+            const response = await axios_1.default.get(`${this.apiUrl}/api/system/pipelines/rule`, {
+                headers: {
+                    'Accept': 'application/json'
+                },
+                auth: {
+                    username: this.accountUserName,
+                    password: this.accountPassword
+                }
+            });
+            return response.data;
+        }
+        catch (e) {
+        }
+        return [];
     }
     initializeDirectories() {
     }
