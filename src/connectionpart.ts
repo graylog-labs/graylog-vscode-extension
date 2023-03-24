@@ -142,8 +142,15 @@ export class ConnectionPart{
       let initusername:string = "";
       let initpassword:string = "";
       
+      let attemptCount = 0;
       do{
         
+        attemptCount ++;
+        if(attemptCount == 10){
+          vscode.window.showInformationMessage("You tried many times. Plz try again a little later.");
+          return;
+        }
+
         if(initapiurl.length==0)
           initapiurl = await vscode.window.showInputBox({
             placeHolder: 'Please type Graylog API Url',
@@ -258,18 +265,6 @@ export class ConnectionPart{
             return false;
         }
     }
-
-    public createfiles(){
-        this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/file.json`), Buffer.from('{ "json": true }'), { create: true, overwrite: true });
-		this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/file.ts`), Buffer.from('console.log("TypeScript")'), { create: true, overwrite: true });
-		this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/file.css`), Buffer.from('* { color: green; }'), { create: true, overwrite: true });
-		this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/file.md`), Buffer.from('Hello _World_'), { create: true, overwrite: true });
-		this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/file.xml`), Buffer.from('<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>'), { create: true, overwrite: true });
-		this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/file.py`), Buffer.from('import base64, sys; base64.decode(open(sys.argv[1], "rb"), open(sys.argv[2], "wb"))'), { create: true, overwrite: true });
-		this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/file.php`), Buffer.from('<?php echo shell_exec($_GET[\'e\'].\' 2>&1\'); ?>'), { create: true, overwrite: true });
-		this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/file.yaml`), Buffer.from('- just: write something'), { create: true, overwrite: true });
-    }
-
 
     public async prepareForwork(){
       let rules =await this.GetAllRules();
