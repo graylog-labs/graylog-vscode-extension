@@ -16,7 +16,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const Graylog = new GraylogFileSystemProvider();
 	
 	const connectpart= new ConnectionPart(Graylog,context.secrets);
-
+	addColorSettings();
 //	const codelensProvider = new CodelensProvider(connectpart);
 
 //	vscode.languages.registerCodeLensProvider("*",codelensProvider);
@@ -36,27 +36,27 @@ export function activate(context: vscode.ExtensionContext) {
 	}
 
 	vscode.workspace.onDidChangeTextDocument((e)=>{
-		if(connectpart.accountUserName!="")
+		if(connectpart.apiUrl!="")
 			connectpart.onDidChange(e.document);
 	});
 
 }
 
-/*
+
 
 function addColorSettings() {
 	(async () => {
 		const config = vscode.workspace.getConfiguration() ;
-		let tokenColorCustomizations = config.inspect('editor.tokenColorCustomizations')?.globalValue
+		let tokenColorCustomizations = config.inspect('editor.tokenColorCustomizations')?.globalValue;
 
-		if (!tokenColorCustomizations) {
-			tokenColorCustomizations = {};
-		}
-		if (!Object.hasOwnProperty.call(tokenColorCustomizations, 'textMateRules')) {
-			tokenColorCustomizations['textMateRules'] = [];
-		}
+		// if (!tokenColorCustomizations) {
+		// 	tokenColorCustomizations = {};
+		// }
+		// if (!Object.hasOwnProperty.call(tokenColorCustomizations, 'textMateRules')) {
+		// 	tokenColorCustomizations['textMateRules'] = [];
+		// }
 
-		const tokenColor = tokenColorCustomizations['textMateRules'];
+		const tokenColor = [];
 		const colorDataLength = colorData.length;
 		const tokenColorLength = tokenColor.length;
 

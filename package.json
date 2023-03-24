@@ -67,18 +67,6 @@
       {
         "command": "nodeDependencies.deleteEntry",
         "title": "Delete"
-      },
-      {
-        "command": "fileExplorer.openFile",
-        "title": "Open File"
-      },
-      {
-        "command": "testView.reveal",
-        "title": "Test View: Reveal"
-      },
-      {
-        "command": "testView.changeTitle",
-        "title": "Test View: Change Title"
       }
     ],
     "menus": {
@@ -118,20 +106,20 @@
 				"extensions": [
 					".grule"
 				],
-				"configuration": "./language-configuration.json"
+				"configuration": "language-configuration.json"
 			}
 		],
 		"grammars": [
 			{
 				"language": "grule",
 				"scopeName": "source.grule",
-				"path": "./syntaxes/grule.tmLanguage.json"
+				"path": "syntaxes/grule.tmLanguage.json"
 			}
 		],
 		"snippets": [
 			{
 				"language": "grule",
-				"path": "./snippets/grule.code-snippets"
+				"path": "snippets/grule.code-snippets"
 			}
 		],
     "colors": [

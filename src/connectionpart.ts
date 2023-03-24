@@ -29,8 +29,8 @@ export class ConnectionPart{
 
 
     public apiUrl:string = "";
-    public accountUserName = "";
-    public accountPassword = "";
+    public token = "";
+    public accountPassword = "token";
     public workingDirectory="";
 
     public errors:sourceError[]=[];
@@ -56,10 +56,10 @@ export class ConnectionPart{
             headers: {
               Accept: 'application/json',
               'Content-Type': 'application/json',
-              'X-Requested-By':this.accountUserName
+              'X-Requested-By':this.token
             },
             auth: {
-              username: this.accountUserName,
+              username: this.token,
               password: this.accountPassword
             }
           }
@@ -128,7 +128,7 @@ export class ConnectionPart{
             'Accept': 'application/json'
           },
           auth: {
-            username: this.accountUserName,
+            username: this.token,
             password: this.accountPassword
           }
         });
@@ -139,8 +139,7 @@ export class ConnectionPart{
     }
     public async LoginInitialize(){
       let initapiurl:string = "";
-      let initusername:string = "";
-      let initpassword:string = "";
+      let inittoken:string = "";
       
       let attemptCount = 0;
       do{
@@ -167,48 +166,33 @@ export class ConnectionPart{
           if(initapiurl.substring(initapiurl.length-1) == "/" || initapiurl.substring(initapiurl.length-1) == "\\"){
             initapiurl = initapiurl.substring(0,initapiurl.length-1);
           }
-          if(initusername =="")
-            initusername = await vscode.window.showInputBox({
-              placeHolder: 'Plz type the username',
+
+          if(inittoken =="")
+            inittoken = await vscode.window.showInputBox({
+              placeHolder: 'Plz type the token',
               ignoreFocusOut: true,
-              prompt:'plz type your graylog username'
+              prompt:'plz type your graylog token'
             }) ?? "";
 
-          if(initusername == ""){
-            vscode.window.showErrorMessage("Username cannot be empty");
+          if(inittoken == ""){
+            vscode.window.showErrorMessage("Token cannot be empty");
             continue;
           }
 
-          if(initpassword =="")
-            initpassword = await vscode.window.showInputBox({
-              placeHolder: 'Plz type the password',
-              ignoreFocusOut: true,
-              prompt:'plz type your graylog password',
-              password: true
-            }) ?? "";
-          if(initpassword =="")
-          {
-            vscode.window.showErrorMessage("Password cannot be empty.");
-            continue;
-          }
-
-          if(!await this.testUserInfo(initapiurl,initusername,initpassword)){
+          if(!await this.testUserInfo(initapiurl,inittoken)){
             vscode.window.showErrorMessage("User Info is not valid");
-            initusername = "";
-            initpassword = "";
+            inittoken = "";
             continue;
           }
 
-          this.accountPassword = initpassword;
-          this.accountUserName = initusername;
+          this.token = inittoken;
           if(initapiurl.includes("/api")){
             this.apiUrl = initapiurl.substring(0,initapiurl.indexOf("/api"))
           }else{
             this.apiUrl = initapiurl;
           }
 
-          await this.secretStorage.store("grayloguser",this.accountPassword);
-          await this.secretStorage.store("graylogpassword",this.accountUserName);
+          await this.secretStorage.store("graylogtoken",this.token);
           await this.secretStorage.store("graylogurl",this.apiUrl);
           break;
         }while(true);
@@ -217,8 +201,7 @@ export class ConnectionPart{
     }
 
     public async restoreUserInfo(){
-      this.accountPassword = await this.secretStorage.get("graylogpassword")??"";
-      this.accountUserName = await this.secretStorage.get("grayloguser")??"";
+      this.token = await this.secretStorage.get("graylogtoken")??"";
       this.apiUrl = await this.secretStorage.get("graylogurl")??"";
     }
     public  async testAPI(apiPath:string):Promise<boolean>{
@@ -232,7 +215,7 @@ export class ConnectionPart{
         }
     }
 
-    public async testUserInfo(apiPath:string, username:string, password:string):Promise<boolean>{
+    public async testUserInfo(apiPath:string, username:string):Promise<boolean>{
         try{
             let path="";
             if(apiPath.includes("/api")){
@@ -248,14 +231,13 @@ export class ConnectionPart{
                 },
                 auth: {
                   username: username,
-                  password: password
+                  password: this.accountPassword
                 }
               });
               
               if(Object.keys(res.data).length > 0)
               {
-                this.accountUserName = username;
-                this.accountPassword = password;
+                this.token = username;
                 this.apiUrl = apiPath;
                 return true;
               }  
@@ -280,7 +262,7 @@ export class ConnectionPart{
             'Accept': 'application/json'
           },
           auth: {
-            username: this.accountUserName,
+            username: this.token,
             password: this.accountPassword
           }
         });
