@@ -11,15 +11,17 @@ const errorMessageBackground: ThemeColor | undefined = new ThemeColor('graylog.e
 const errorBackground: ThemeColor | undefined = new ThemeColor('graylog.errorBackground');
 const errorBackgroundLight: ThemeColor | undefined = new ThemeColor('graylog.errorBackgroundLight');
 
-const hintBackground: ThemeColor | undefined = new ThemeColor('graylog.hintBackground');
-const hintBackgroundLight: ThemeColor | undefined = new ThemeColor('graylog.hintBackgroundLight');
-const hintForeground = new ThemeColor('graylog.hintForeground');
-const hintForegroundLight = new ThemeColor('graylog.hintForegroundLight');
-const hintMessageBackground: ThemeColor | undefined = new ThemeColor('graylog.hintMessageBackground');
+// const hintBackground: ThemeColor | undefined = new ThemeColor('graylog.hintBackground');
+// const hintBackgroundLight: ThemeColor | undefined = new ThemeColor('graylog.hintBackgroundLight');
+// const hintForeground = new ThemeColor('graylog.hintForeground');
+// const hintForegroundLight = new ThemeColor('graylog.hintForegroundLight');
+// const hintMessageBackground: ThemeColor | undefined = new ThemeColor('graylog.hintMessageBackground');
+
 const icon = vscode.window.createTextEditorDecorationType({
   gutterIconPath:`${BASE_PATH}${ICON_PATH}`,
   gutterIconSize:'80%',
-  backgroundCo
+  isWholeLine: true,
+  backgroundColor: errorBackground
 });
 
 
@@ -95,12 +97,20 @@ export class ConnectionPart{
           ranges.push(range);
           const decInstanceRenderOptions: DecorationInstanceRenderOptions = {
             after: {
-              contentText: truncateString(oneresult.reason,30),
+              contentText: truncateString(" "+oneresult.reason,40),
+              color: errorForeground,
+              backgroundColor: errorMessageBackground
+            },
+            light:{
+              after:{
+                backgroundColor: errorBackgroundLight,
+                color: errorForegroundLight
+              }
             },
           }; 
           decorationOptions.push({
             range,
-            renderOptions: decInstanceRenderOptions 
+            renderOptions: decInstanceRenderOptions ,
           });
 
         }
@@ -108,7 +118,7 @@ export class ConnectionPart{
       });
 
 
-      vscode.window.activeTextEditor?.setDecorations(icon,ranges);
+      vscode.window.activeTextEditor?.setDecorations(icon,decorationOptions);
     }
 
     public async GetRuleSource(id:string){

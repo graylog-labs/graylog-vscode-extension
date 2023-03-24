@@ -224,7 +224,7 @@
 					"highContrast": "#2faf64"
 				},
 				"description": "Text color used to highlight lines containing hints (Only in light themes)."
-			},
+			}
 		]
   },
   "scripts": {

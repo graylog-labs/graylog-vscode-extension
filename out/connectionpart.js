@@ -3,9 +3,26 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ConnectionPart = void 0;
 const vscode = require("vscode");
 const axios_1 = require("axios");
+const vscode_1 = require("vscode");
+const utils_1 = require("./utils");
 const BASE_PATH = `${vscode?.extensions?.getExtension('pdragon.task-graylog')?.extensionPath}/resources/`;
 const ICON_PATH = 'error-inverse.svg';
-const icon = vscode.window.createTextEditorDecorationType({ gutterIconPath: `${BASE_PATH}${ICON_PATH}`, gutterIconSize: '80%' });
+const errorForeground = new vscode_1.ThemeColor('graylog.errorForeground');
+const errorForegroundLight = new vscode_1.ThemeColor('graylog.errorForegroundLight');
+const errorMessageBackground = new vscode_1.ThemeColor('graylog.errorMessageBackground');
+const errorBackground = new vscode_1.ThemeColor('graylog.errorBackground');
+const errorBackgroundLight = new vscode_1.ThemeColor('graylog.errorBackgroundLight');
+// const hintBackground: ThemeColor | undefined = new ThemeColor('graylog.hintBackground');
+// const hintBackgroundLight: ThemeColor | undefined = new ThemeColor('graylog.hintBackgroundLight');
+// const hintForeground = new ThemeColor('graylog.hintForeground');
+// const hintForegroundLight = new ThemeColor('graylog.hintForegroundLight');
+// const hintMessageBackground: ThemeColor | undefined = new ThemeColor('graylog.hintMessageBackground');
+const icon = vscode.window.createTextEditorDecorationType({
+    gutterIconPath: `${BASE_PATH}${ICON_PATH}`,
+    gutterIconSize: '80%',
+    isWholeLine: true,
+    backgroundColor: errorBackground
+});
 class ConnectionPart {
     constructor(graylogFilesystem, secretStorage) {
         this.graylogFilesystem = graylogFilesystem;
@@ -52,6 +69,7 @@ class ConnectionPart {
         }
         this.errors = result;
         let ranges = [];
+        let decorationOptions = [];
         result.map((oneresult) => {
             let line = oneresult.line - 1;
             let indexOf = oneresult.position_in_line;
@@ -60,10 +78,28 @@ class ConnectionPart {
             let position1 = new vscode.Position(line, 10);
             // document.getWordRangeAtPosition(position)
             let range = new vscode.Range(position, position1);
-            if (range)
+            if (range) {
                 ranges.push(range);
+                const decInstanceRenderOptions = {
+                    after: {
+                        contentText: (0, utils_1.truncateString)(" " + oneresult.reason, 40),
+                        color: errorForeground,
+                        backgroundColor: errorMessageBackground
+                    },
+                    light: {
+                        after: {
+                            backgroundColor: errorBackgroundLight,
+                            color: errorForegroundLight
+                        }
+                    },
+                };
+                decorationOptions.push({
+                    range,
+                    renderOptions: decInstanceRenderOptions,
+                });
+            }
         });
-        vscode.window.activeTextEditor?.setDecorations(icon, ranges);
+        vscode.window.activeTextEditor?.setDecorations(icon, decorationOptions);
     }
     async GetRuleSource(id) {
         try {
