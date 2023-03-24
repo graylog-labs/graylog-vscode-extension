@@ -133,6 +133,98 @@
 				"language": "grule",
 				"path": "./snippets/grule.code-snippets"
 			}
+		],
+    "colors": [
+			{
+				"id": "graylog.errorBackground",
+				"defaults": {
+					"dark": "#e454541b",
+					"light": "#e4545420",
+					"highContrast": "#e454541b"
+				},
+				"description": "Background color of the entire line containing error."
+			},
+			{
+				"id": "graylog.errorMessageBackground",
+				"defaults": {
+					"dark": "#e4545419",
+					"light": "#e4545419",
+					"highContrast": "#e4545419"
+				},
+				"description": "Background color of the error message."
+			},
+			{
+				"id": "graylog.errorBackgroundLight",
+				"defaults": {
+					"dark": "#e4545420",
+					"light": "#e4545420",
+					"highContrast": "#e4545420"
+				},
+				"description": "Background color of the entire line containing error (Only in light themes)."
+			},
+			{
+				"id": "graylog.errorForeground",
+				"defaults": {
+					"dark": "#ff6464",
+					"light": "#e45454",
+					"highContrast": "#ff6464"
+				},
+				"description": "Text color used to highlight lines containing errors."
+			},
+			{
+				"id": "graylog.errorForegroundLight",
+				"defaults": {
+					"dark": "#e45454",
+					"light": "#e45454",
+					"highContrast": "#e45454"
+				},
+				"description": "Text color used to highlight lines containing errors (Only in light themes)."
+			},
+      {
+				"id": "errorLens.hintBackground",
+				"defaults": {
+					"dark": "#17a2a220",
+					"light": "#17a2a220",
+					"highContrast": "#17a2a220"
+				},
+				"description": "Background color used to highlight lines containing hints."
+			},
+			{
+				"id": "errorLens.hintMessageBackground",
+				"defaults": {
+					"dark": "#17a2a219",
+					"light": "#17a2a219",
+					"highContrast": "#17a2a219"
+				},
+				"description": "Background color of the hint message."
+			},
+			{
+				"id": "errorLens.hintBackgroundLight",
+				"defaults": {
+					"dark": "#17a2a220",
+					"light": "#17a2a220",
+					"highContrast": "#17a2a220"
+				},
+				"description": "Background color used to highlight lines containing hints (Only in light themes)."
+			},
+			{
+				"id": "errorLens.hintForeground",
+				"defaults": {
+					"dark": "#2faf64",
+					"light": "#2faf64",
+					"highContrast": "#2faf64"
+				},
+				"description": "Text color used to highlight lines containing hints."
+			},
+			{
+				"id": "errorLens.hintForegroundLight",
+				"defaults": {
+					"dark": "#2faf64",
+					"light": "#2faf64",
+					"highContrast": "#2faf64"
+				},
+				"description": "Text color used to highlight lines containing hints (Only in light themes)."
+			},
 		]
   },
   "scripts": {

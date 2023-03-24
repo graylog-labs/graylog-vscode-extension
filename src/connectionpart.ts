@@ -1,11 +1,27 @@
 import * as vscode from 'vscode';
 import { GraylogFileSystemProvider } from './fileSystemProvider';
 import axios from 'axios';
-
+import { DecorationInstanceRenderOptions,ThemeColor } from 'vscode';
+import { replaceLinebreaks, truncateString } from './utils';
 const BASE_PATH = `${vscode?.extensions?.getExtension('pdragon.task-graylog')?.extensionPath}/resources/`;
 const ICON_PATH='error-inverse.svg';
+const errorForeground = new ThemeColor('graylog.errorForeground');
+const errorForegroundLight = new ThemeColor('graylog.errorForegroundLight');
+const errorMessageBackground: ThemeColor | undefined = new ThemeColor('graylog.errorMessageBackground');
+const errorBackground: ThemeColor | undefined = new ThemeColor('graylog.errorBackground');
+const errorBackgroundLight: ThemeColor | undefined = new ThemeColor('graylog.errorBackgroundLight');
 
-const icon = vscode.window.createTextEditorDecorationType({gutterIconPath:`${BASE_PATH}${ICON_PATH}`,gutterIconSize:'80%'});
+const hintBackground: ThemeColor | undefined = new ThemeColor('graylog.hintBackground');
+const hintBackgroundLight: ThemeColor | undefined = new ThemeColor('graylog.hintBackgroundLight');
+const hintForeground = new ThemeColor('graylog.hintForeground');
+const hintForegroundLight = new ThemeColor('graylog.hintForegroundLight');
+const hintMessageBackground: ThemeColor | undefined = new ThemeColor('graylog.hintMessageBackground');
+const icon = vscode.window.createTextEditorDecorationType({
+  gutterIconPath:`${BASE_PATH}${ICON_PATH}`,
+  gutterIconSize:'80%',
+  backgroundCo
+});
+
 
 export class ConnectionPart{
 
@@ -65,14 +81,33 @@ export class ConnectionPart{
       this.errors = result;
 
       let ranges:vscode.Range[]=[];
+      let decorationOptions:vscode.DecorationOptions[] = [];
+
       result.map((oneresult)=>{
         let line = oneresult.line-1;
         let indexOf = oneresult.position_in_line;
-        let position = new vscode.Position(line, indexOf +1 ); 
-        let range = document.getWordRangeAtPosition(position);
-        if(range) 
+        // let position = new vscode.Position(line, indexOf +1 ); 
+        let position = new vscode.Position(line, 1 );
+        let position1 = new vscode.Position(line, 10 );
+        // document.getWordRangeAtPosition(position)
+        let range = new vscode.Range(position,position1);
+        if(range) {
           ranges.push(range);
+          const decInstanceRenderOptions: DecorationInstanceRenderOptions = {
+            after: {
+              contentText: truncateString(oneresult.reason,30),
+            },
+          }; 
+          decorationOptions.push({
+            range,
+            renderOptions: decInstanceRenderOptions 
+          });
+
+        }
+          
       });
+
+
       vscode.window.activeTextEditor?.setDecorations(icon,ranges);
     }
 

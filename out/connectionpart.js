@@ -55,8 +55,11 @@ class ConnectionPart {
         result.map((oneresult) => {
             let line = oneresult.line - 1;
             let indexOf = oneresult.position_in_line;
-            let position = new vscode.Position(line, indexOf + 1);
-            let range = document.getWordRangeAtPosition(position);
+            // let position = new vscode.Position(line, indexOf +1 ); 
+            let position = new vscode.Position(line, 1);
+            let position1 = new vscode.Position(line, 10);
+            // document.getWordRangeAtPosition(position)
+            let range = new vscode.Range(position, position1);
             if (range)
                 ranges.push(range);
         });
