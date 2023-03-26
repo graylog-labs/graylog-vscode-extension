@@ -97,8 +97,8 @@
 			{
 				"id": "grule",
         "icon":{
-          "light":"./resources/icons8-earth-64.png",
-          "dark":"./resources/icons8-earth-64.png"
+          "light":"./resources/planet-icon.svg",
+          "dark":"./resources/planet-icon.svg"
         },
 				"aliases": [
 					"grule"

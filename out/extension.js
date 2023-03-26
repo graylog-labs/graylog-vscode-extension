@@ -9,32 +9,44 @@ function activate(context) {
     const Graylog = new fileSystemProvider_1.GraylogFileSystemProvider();
     const connectpart = new connectionpart_1.ConnectionPart(Graylog, context.secrets);
     addColorSettings();
-    //	const codelensProvider = new CodelensProvider(connectpart);
-    //	vscode.languages.registerCodeLensProvider("*",codelensProvider);
     context.subscriptions.push(vscode.workspace.registerFileSystemProvider('graylog', Graylog, { isCaseSensitive: true }));
     let initialized = false;
     context.subscriptions.push(vscode.commands.registerCommand('graylog.workspaceInit', async () => {
-        await connectpart.LoginInitialize();
+        connectpart.clearworkspace();
     }));
-    if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0 && vscode.workspace.workspaceFolders[0].name == 'Graylog API') {
-        connectpart.prepareForwork();
-    }
+    prepareForWork(connectpart, context.secrets);
     vscode.workspace.onDidChangeTextDocument((e) => {
         if (connectpart.apiUrl != "")
             connectpart.onDidChange(e.document);
     });
+    vscode.window.onDidChangeActiveTextEditor(e => {
+        if (connectpart.apiUrl != "" && e?.document)
+            connectpart.onDidChange(e?.document);
+    });
+    vscode.workspace.onDidCreateFiles((e) => {
+        e.files.map((file) => {
+            let name = file.path.replace("/", "").split('.')[0];
+            let extension = file.path.replace("/", "").split('.')[1];
+            if (file.scheme == 'graylog' && extension == 'grule') {
+                connectpart.createRule(name);
+            }
+        });
+    });
+    console.log('uhhh');
 }
 exports.activate = activate;
+async function prepareForWork(connectpart, secretStorage) {
+    if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0 && vscode.workspace.workspaceFolders[0].name == 'Graylog API') {
+        connectpart.prepareForwork();
+    }
+    if (await secretStorage.get("reloaded") == "yes") {
+        connectpart.LoginInitialize();
+    }
+}
 function addColorSettings() {
     (async () => {
         const config = vscode.workspace.getConfiguration();
         let tokenColorCustomizations = config.inspect('editor.tokenColorCustomizations')?.globalValue;
-        // if (!tokenColorCustomizations) {
-        // 	tokenColorCustomizations = {};
-        // }
-        // if (!Object.hasOwnProperty.call(tokenColorCustomizations, 'textMateRules')) {
-        // 	tokenColorCustomizations['textMateRules'] = [];
-        // }
         const tokenColor = [];
         const colorDataLength = colorData.length;
         const tokenColorLength = tokenColor.length;

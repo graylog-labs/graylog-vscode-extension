@@ -3,6 +3,7 @@ import { GraylogFileSystemProvider } from './fileSystemProvider';
 import axios from 'axios';
 import { DecorationInstanceRenderOptions,ThemeColor } from 'vscode';
 import { replaceLinebreaks, truncateString } from './utils';
+import { newFileSource } from './constants';
 const BASE_PATH = `${vscode?.extensions?.getExtension('pdragon.task-graylog')?.extensionPath}/resources/`;
 const ICON_PATH='error-inverse.svg';
 const errorForeground = new ThemeColor('graylog.errorForeground');
@@ -10,12 +11,6 @@ const errorForegroundLight = new ThemeColor('graylog.errorForegroundLight');
 const errorMessageBackground: ThemeColor | undefined = new ThemeColor('graylog.errorMessageBackground');
 const errorBackground: ThemeColor | undefined = new ThemeColor('graylog.errorBackground');
 const errorBackgroundLight: ThemeColor | undefined = new ThemeColor('graylog.errorBackgroundLight');
-
-// const hintBackground: ThemeColor | undefined = new ThemeColor('graylog.hintBackground');
-// const hintBackgroundLight: ThemeColor | undefined = new ThemeColor('graylog.hintBackgroundLight');
-// const hintForeground = new ThemeColor('graylog.hintForeground');
-// const hintForegroundLight = new ThemeColor('graylog.hintForegroundLight');
-// const hintMessageBackground: ThemeColor | undefined = new ThemeColor('graylog.hintMessageBackground');
 
 const icon = vscode.window.createTextEditorDecorationType({
   gutterIconPath:`${BASE_PATH}${ICON_PATH}`,
@@ -32,15 +27,54 @@ export class ConnectionPart{
     public token = "";
     public accountPassword = "token";
     public workingDirectory="";
-
+    public grules:RuleField[] =[];
     public errors:sourceError[]=[];
     constructor(private graylogFilesystem: GraylogFileSystemProvider,private readonly secretStorage:vscode.SecretStorage){
-   //     this.workingDirectory = this.getDefaultWorkingDirectory();
     }
 
 
+    public async createRule(filename:string){
+      let response; 
+
+      let title = filename;
+      try{
+        response = await axios.post(
+          `${this.apiUrl}/api/system/pipelines/rule`
+          ,{
+            title: title,
+            source:newFileSource(title),
+            description: title
+          },
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+              'X-Requested-By':this.token
+            },
+            auth: {
+              username: this.token,
+              password: this.accountPassword
+            }
+          }
+        );
+
+        if(response.status == 200){
+          this.wrilteFile(response.data);
+        }
+      }catch(e){
+        if(e.response?.data){
+          vscode.window.showErrorMessage("Failed to create");
+          this.graylogFilesystem.delete(vscode.Uri.parse(`graylog:/${filename}.grule`));     
+        }
+      }
+    }
     public async onDidChange(document:vscode.TextDocument){
-      let id= document.fileName.replace('/','').split('.')[0];
+      let title= document.fileName.replace('/','').split('.')[0];
+      let dindex = this.grules.findIndex((rule)=>{return rule.title == title});
+      if(dindex == -1)
+        return;
+      
+      let id = this.grules[dindex].id;
       let rulesource =await this.GetRuleSource(id);
       rulesource['source']=document.getText();
       delete rulesource['errors'];
@@ -197,7 +231,9 @@ export class ConnectionPart{
           break;
         }while(true);
 
+        await this.secretStorage.store("reloaded","no");
         vscode.workspace.updateWorkspaceFolders(0, 0, { uri: vscode.Uri.parse('graylog:/'), name: "Graylog API" });
+
     }
 
     public async restoreUserInfo(){
@@ -248,10 +284,19 @@ export class ConnectionPart{
         }
     }
 
+    public wrilteFile(rule:any){
+      this.grules.push({  
+        title: rule['title'],
+        id: rule['id'],
+        description: rule['description']
+      });
+      this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/${rule['title']}.grule`), Buffer.from(rule['source']), { create: true, overwrite: true });
+    }
+    
     public async prepareForwork(){
       let rules =await this.GetAllRules();
       rules.map((rule)=>{
-        this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/${rule['id']}.grule`), Buffer.from(rule['source']), { create: true, overwrite: true });
+        this.wrilteFile(rule);
       });
     }
     public async GetAllRules():Promise<[]>{
@@ -272,8 +317,30 @@ export class ConnectionPart{
       }
       return [];
     }
-    initializeDirectories(){
+
+    public async clearworkspace(){
+      await this.secretStorage.store("reloaded","no");
+      vscode.workspace.workspaceFolders?.map(async (folder, index)=>{
+        if(folder.name == 'Graylog API'){
+          await this.secretStorage.store("reloaded","yes");
+          // var directory = this.graylogFilesystem.readDirectory(vscode.Uri.parse('graylog:/'));
+          // directory.map((eachfile)=>{
+          //   this.graylogFilesystem.delete(vscode.Uri.parse(`graylog:/${eachfile}`))
+          // });
+          vscode.workspace.updateWorkspaceFolders(index,1);
+        }
+      });
+
+      if(await this.secretStorage.get("reloaded") != "yes"){
+        this.LoginInitialize();
+      }
     }
+}
+
+export interface RuleField{
+  title: string,
+  description: string,
+  id: string,
 }
 
 export interface sourceError{
