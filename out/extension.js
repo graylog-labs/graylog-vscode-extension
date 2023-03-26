@@ -32,7 +32,6 @@ function activate(context) {
             }
         });
     });
-    console.log('uhhh');
 }
 exports.activate = activate;
 async function prepareForWork(connectpart, secretStorage) {

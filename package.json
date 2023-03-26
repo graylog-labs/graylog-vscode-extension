@@ -14,100 +14,27 @@
 		"onLanguage:grule"
 	],
   "main": "./out/extension.js",
+  "showLanguageModeIcons": true,
   "contributes": {
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "package-explorer",
-          "title": "Package Explorer",
-          "icon": "media/dep.svg"
-        }
-      ]
-    },
-    "views": {
-      "package-explorer": [
-        {
-          "id": "nodeDependencies",
-          "name": "Node Dependencies",
-          "icon": "media/dep.svg",
-          "contextualTitle": "Package Explorer"
-        }
-      ]
-    },
     "commands": [
       {
         "command": "graylog.workspaceInit",
         "title": "Setup Workspace",
         "category": "Graylog"
-      },
-      {
-        "command": "nodeDependencies.refreshEntry",
-        "title": "Refresh",
-        "icon": {
-          "light": "resources/light/refresh.svg",
-          "dark": "resources/dark/refresh.svg"
-        }
-      },
-      {
-        "command": "nodeDependencies.openDocument",
-        "title": "openDocument"
-      },
-      {
-        "command": "nodeDependencies.addEntry",
-        "title": "Add"
-      },
-      {
-        "command": "nodeDependencies.editEntry",
-        "title": "Edit",
-        "icon": {
-          "light": "resources/light/edit.svg",
-          "dark": "resources/dark/edit.svg"
-        }
-      },
-      {
-        "command": "nodeDependencies.deleteEntry",
-        "title": "Delete"
       }
     ],
-    "menus": {
-      "view/title": [
-        {
-          "command": "nodeDependencies.refreshEntry",
-          "when": "view == nodeDependencies",
-          "group": "navigation"
-        },
-        {
-          "command": "nodeDependencies.addEntry",
-          "when": "view == nodeDependencies"
-        }
-      ],
-      "view/item/context": [
-        {
-          "command": "nodeDependencies.editEntry",
-          "when": "view == nodeDependencies && viewItem == dependency",
-          "group": "inline"
-        },
-        {
-          "command": "nodeDependencies.deleteEntry",
-          "when": "view == nodeDependencies && viewItem == dependency"
-        }
-      ]
-    },
     "languages": [
-			{
-				"id": "grule",
-        "icon":{
-          "light":"./resources/planet-icon.svg",
-          "dark":"./resources/planet-icon.svg"
-        },
-				"aliases": [
-					"grule"
-				],
-				"extensions": [
-					".grule"
-				],
-				"configuration": "language-configuration.json"
-			}
+		{
+			"id": "grule",
+			"icon":{
+				"light":"resources/icons8-earth-64.png",
+				"dark":"resources/icons8-earth-64.png"
+			},
+			"extensions": [
+				".grule"
+			],
+			"configuration": "language-configuration.json"
+		}
 		],
 		"grammars": [
 			{
@@ -242,3 +169,4 @@
     "rimraf": "^4.4.0"
   }
 }
+

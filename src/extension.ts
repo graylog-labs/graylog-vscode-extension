@@ -50,7 +50,6 @@ export function activate(context: vscode.ExtensionContext) {
 		});
 	});
 
-	console.log('uhhh');
 }
 
 async function prepareForWork(connectpart:ConnectionPart,secretStorage:vscode.SecretStorage){
@@ -98,3 +97,15 @@ function addColorSettings() {
 		);
 	})();
 }
+
+
+// "views": {
+// 	"package-explorer": [
+// 	  {
+// 		"id": "nodeDependencies",
+// 		"name": "Node Dependencies",
+// 		"icon": "media/dep.svg",
+// 		"contextualTitle": "Package Explorer"
+// 	  }
+// 	]
+//   },
