@@ -12,6 +12,15 @@ Features:
 
 # Getting Started
 
+## Installation
+
+1. Clone this repo locally using VSCode
+2. Open the Command Pallette:
+    * Windows: `F1` or `Ctrl` + `Shift` + `P`
+    * Mac: `F1` or `Cmd` + `Shift` + `P`
+3. Type (or copy/paste): `developer: install extension from Location` 
+4. Choose path created from cloning the repo locally
+
 ## Create a Graylog User token
 
 * Log in to your Graylog console
