@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.newFileSource = void 0;
 function newFileSource(title) {
     return `rule "${title}"
-when
+    when
     // Set the conditions of your rule
     true
 then
@@ -15,7 +15,7 @@ then
     // https://schema.graylog.org
 
     // Thanks for using the Graylog VSCode Editor - Graylog Services Team
-
+    
 end`;
 }
 exports.newFileSource = newFileSource;

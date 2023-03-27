@@ -1,9 +1,9 @@
 {
-  "name": "graylog-rules",
+  "name": "graylog-rules-manager",
   "displayName": "Graylog Rules Manager",
   "description": "This is extension assists with managing your Pipeline rules in a running Graylog instance.",
   "icon": "media/logo.png",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "engines": {
     "vscode": "^1.76.0"
   },
@@ -12,8 +12,8 @@
     "Other"
   ],
   "activationEvents": [
-		"onLanguage:grule"
-	],
+    "onLanguage:grule"
+  ],
   "main": "./out/extension.js",
   "showLanguageModeIcons": true,
   "contributes": {
@@ -25,123 +25,123 @@
       }
     ],
     "languages": [
-		{
-			"id": "grule",
-			"icon":{
-				"light":"resources/icons8-earth-64.png",
-				"dark":"resources/icons8-earth-64.png"
-			},
-			"extensions": [
-				".grule"
-			],
-			"configuration": "language-configuration.json"
-		}
-		],
-		"grammars": [
-			{
-				"language": "grule",
-				"scopeName": "source.grule",
-				"path": "syntaxes/grule.tmLanguage.json"
-			}
-		],
-		"snippets": [
-			{
-				"language": "grule",
-				"path": "snippets/grule.code-snippets"
-			}
-		],
-    "colors": [
-			{
-				"id": "graylog.errorBackground",
-				"defaults": {
-					"dark": "#e454541b",
-					"light": "#e4545420",
-					"highContrast": "#e454541b"
-				},
-				"description": "Background color of the entire line containing error."
-			},
-			{
-				"id": "graylog.errorMessageBackground",
-				"defaults": {
-					"dark": "#e4545419",
-					"light": "#e4545419",
-					"highContrast": "#e4545419"
-				},
-				"description": "Background color of the error message."
-			},
-			{
-				"id": "graylog.errorBackgroundLight",
-				"defaults": {
-					"dark": "#e4545420",
-					"light": "#e4545420",
-					"highContrast": "#e4545420"
-				},
-				"description": "Background color of the entire line containing error (Only in light themes)."
-			},
-			{
-				"id": "graylog.errorForeground",
-				"defaults": {
-					"dark": "#ff6464",
-					"light": "#e45454",
-					"highContrast": "#ff6464"
-				},
-				"description": "Text color used to highlight lines containing errors."
-			},
-			{
-				"id": "graylog.errorForegroundLight",
-				"defaults": {
-					"dark": "#e45454",
-					"light": "#e45454",
-					"highContrast": "#e45454"
-				},
-				"description": "Text color used to highlight lines containing errors (Only in light themes)."
-			},
       {
-				"id": "errorLens.hintBackground",
-				"defaults": {
-					"dark": "#17a2a220",
-					"light": "#17a2a220",
-					"highContrast": "#17a2a220"
-				},
-				"description": "Background color used to highlight lines containing hints."
-			},
-			{
-				"id": "errorLens.hintMessageBackground",
-				"defaults": {
-					"dark": "#17a2a219",
-					"light": "#17a2a219",
-					"highContrast": "#17a2a219"
-				},
-				"description": "Background color of the hint message."
-			},
-			{
-				"id": "errorLens.hintBackgroundLight",
-				"defaults": {
-					"dark": "#17a2a220",
-					"light": "#17a2a220",
-					"highContrast": "#17a2a220"
-				},
-				"description": "Background color used to highlight lines containing hints (Only in light themes)."
-			},
-			{
-				"id": "errorLens.hintForeground",
-				"defaults": {
-					"dark": "#2faf64",
-					"light": "#2faf64",
-					"highContrast": "#2faf64"
-				},
-				"description": "Text color used to highlight lines containing hints."
-			},
-			{
-				"id": "errorLens.hintForegroundLight",
-				"defaults": {
-					"dark": "#2faf64",
-					"light": "#2faf64",
-					"highContrast": "#2faf64"
-				},
-				"description": "Text color used to highlight lines containing hints (Only in light themes)."
-			}
-		]
+        "id": "grule",
+        "icon": {
+          "light": "resources/icons8-earth-64.png",
+          "dark": "resources/icons8-earth-64.png"
+        },
+        "extensions": [
+          ".grule"
+        ],
+        "configuration": "language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "grule",
+        "scopeName": "source.grule",
+        "path": "syntaxes/grule.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "grule",
+        "path": "snippets/grule.code-snippets"
+      }
+    ],
+    "colors": [
+      {
+        "id": "graylog.errorBackground",
+        "defaults": {
+          "dark": "#e454541b",
+          "light": "#e4545420",
+          "highContrast": "#e454541b"
+        },
+        "description": "Background color of the entire line containing error."
+      },
+      {
+        "id": "graylog.errorMessageBackground",
+        "defaults": {
+          "dark": "#e4545419",
+          "light": "#e4545419",
+          "highContrast": "#e4545419"
+        },
+        "description": "Background color of the error message."
+      },
+      {
+        "id": "graylog.errorBackgroundLight",
+        "defaults": {
+          "dark": "#e4545420",
+          "light": "#e4545420",
+          "highContrast": "#e4545420"
+        },
+        "description": "Background color of the entire line containing error (Only in light themes)."
+      },
+      {
+        "id": "graylog.errorForeground",
+        "defaults": {
+          "dark": "#ff6464",
+          "light": "#e45454",
+          "highContrast": "#ff6464"
+        },
+        "description": "Text color used to highlight lines containing errors."
+      },
+      {
+        "id": "graylog.errorForegroundLight",
+        "defaults": {
+          "dark": "#e45454",
+          "light": "#e45454",
+          "highContrast": "#e45454"
+        },
+        "description": "Text color used to highlight lines containing errors (Only in light themes)."
+      },
+      {
+        "id": "errorLens.hintBackground",
+        "defaults": {
+          "dark": "#17a2a220",
+          "light": "#17a2a220",
+          "highContrast": "#17a2a220"
+        },
+        "description": "Background color used to highlight lines containing hints."
+      },
+      {
+        "id": "errorLens.hintMessageBackground",
+        "defaults": {
+          "dark": "#17a2a219",
+          "light": "#17a2a219",
+          "highContrast": "#17a2a219"
+        },
+        "description": "Background color of the hint message."
+      },
+      {
+        "id": "errorLens.hintBackgroundLight",
+        "defaults": {
+          "dark": "#17a2a220",
+          "light": "#17a2a220",
+          "highContrast": "#17a2a220"
+        },
+        "description": "Background color used to highlight lines containing hints (Only in light themes)."
+      },
+      {
+        "id": "errorLens.hintForeground",
+        "defaults": {
+          "dark": "#2faf64",
+          "light": "#2faf64",
+          "highContrast": "#2faf64"
+        },
+        "description": "Text color used to highlight lines containing hints."
+      },
+      {
+        "id": "errorLens.hintForegroundLight",
+        "defaults": {
+          "dark": "#2faf64",
+          "light": "#2faf64",
+          "highContrast": "#2faf64"
+        },
+        "description": "Text color used to highlight lines containing hints (Only in light themes)."
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -168,6 +168,21 @@
     "axios": "^1.3.4",
     "mkdirp": "^2.1.5",
     "rimraf": "^4.4.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/graylog-labs/graylog-vscode-extension.git"
+  },
+  "keywords": [
+    "Graylog",
+    "Pipeline",
+    "Rules",
+    "Manager"
+  ],
+  "author": "Graylog Labs",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/graylog-labs/graylog-vscode-extension/issues"
+  },
+  "homepage": "https://github.com/graylog-labs/graylog-vscode-extension#readme"
 }
-
