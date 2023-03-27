@@ -180,7 +180,7 @@ export class ConnectionPart{
         
         attemptCount ++;
         if(attemptCount == 10){
-          vscode.window.showInformationMessage("You tried many times. Plz try again a little later.");
+          vscode.window.showInformationMessage("Too many invalid attempts, please try again later.");
           return;
         }
 
@@ -203,9 +203,9 @@ export class ConnectionPart{
 
           if(inittoken =="")
             inittoken = await vscode.window.showInputBox({
-              placeHolder: 'Plz type the token',
+              placeHolder: 'API Token',
               ignoreFocusOut: true,
-              prompt:'plz type your graylog token'
+              prompt:'Please enter your API Token'
             }) ?? "";
 
           if(inittoken == ""){

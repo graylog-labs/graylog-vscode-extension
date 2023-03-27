@@ -1,12 +1,13 @@
 {
-  "name": "task-graylog",
-  "displayName": "Task_graylog",
-  "description": "",
+  "name": "graylog-rules",
+  "displayName": "Graylog Rules Manager",
+  "description": "This is extension assists with managing your Pipeline rules in a running Graylog instance.",
+  "icon": "media/logo.png",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.76.0"
   },
-  "publisher": "pdragon",
+  "publisher": "Graylog-Labs",
   "categories": [
     "Other"
   ],
