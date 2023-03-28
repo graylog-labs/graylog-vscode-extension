@@ -1,3 +1,10 @@
+# vscode build files
+*/out/
+
+# Compiled vsix from local builds
+# Ideally, this will get published to the extension store
+*.vsix
+
 # Logs
 logs
 *.log
