@@ -27,17 +27,28 @@ export function activate(context: vscode.ExtensionContext) {
 		connectpart.clearworkspace();
 	}));
 
+	context.subscriptions.push(vscode.commands.registerCommand('graylog.RereshWorkSpace', async () => {
+		connectpart.refreshWorkspace();
+	}));
 	
 	prepareForWork(connectpart,context.secrets);
 
 	vscode.workspace.onDidChangeTextDocument((e)=>{
 		if(connectpart.apiUrl!="")
-			connectpart.onDidChange(e.document);
+			// e?.document.save().then((result)=>{
+			// 	if(result){
+					connectpart.onDidChange(e?.document);
+				// }
+			// })
 	});
 	
 	vscode.window.onDidChangeActiveTextEditor(e=>{
 		if(connectpart.apiUrl!="" && e?.document)
-			connectpart.onDidChange(e?.document);
+			// e?.document.save().then((result)=>{
+				// if(result){
+					connectpart.onDidChange(e?.document);
+				// }
+			// })
 	});
 
 	vscode.workspace.onDidCreateFiles((e)=>{

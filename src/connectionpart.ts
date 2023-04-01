@@ -69,7 +69,7 @@ export class ConnectionPart{
       }
     }
     public async onDidChange(document:vscode.TextDocument){
-      let title= document.fileName.replace('/','').split('.')[0];
+      let title= document.fileName.substring(1).split('.')[0];
       let dindex = this.grules.findIndex((rule)=>{return rule.title == title});
       if(dindex == -1)
         return;
@@ -180,7 +180,7 @@ export class ConnectionPart{
         
         attemptCount ++;
         if(attemptCount == 10){
-          vscode.window.showInformationMessage("Too many invalid attempts, please try again later.");
+          vscode.window.showInformationMessage("You tried many times. Plz try again a little later.");
           return;
         }
 
@@ -203,9 +203,9 @@ export class ConnectionPart{
 
           if(inittoken =="")
             inittoken = await vscode.window.showInputBox({
-              placeHolder: 'API Token',
+              placeHolder: 'Plz type the token',
               ignoreFocusOut: true,
-              prompt:'Please enter your API Token'
+              prompt:'plz type your graylog token'
             }) ?? "";
 
           if(inittoken == ""){
@@ -285,12 +285,22 @@ export class ConnectionPart{
     }
 
     public wrilteFile(rule:any){
+      
+
+      let paths = rule['title'].split('/');
+      let cumulative = "";
+      if(paths.length > 1){
+        for(let i=0;i<paths.length -1 ; i++){
+          this.graylogFilesystem.createDirectory(vscode.Uri.parse(`graylog:/${cumulative}${paths[i]}`));
+          cumulative +=(paths[i] + "/");
+        }
+      }
+      this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/${rule['title']}.grule`), Buffer.from(rule['source']), { create: true, overwrite: true });
       this.grules.push({  
         title: rule['title'],
         id: rule['id'],
-        description: rule['description']
+        description: rule['description'],
       });
-      this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/${rule['title']}.grule`), Buffer.from(rule['source']), { create: true, overwrite: true });
     }
     
     public async prepareForwork(){
@@ -335,6 +345,36 @@ export class ConnectionPart{
         this.LoginInitialize();
       }
     }
+
+    ////refresh from webUI interface
+    public async refreshWorkspace(){
+      let tempRules = await this.GetAllRules();
+      tempRules.forEach((tmpRule)=>{
+        let fIdx = this.grules.findIndex((rule)=> rule['title'] == tmpRule['title']);
+        if(fIdx > -1){
+          this.updateRule(this.grules[fIdx],tmpRule);
+        }else{
+          this.wrilteFile(tmpRule);
+        }
+      });
+
+    }
+
+    public readRule(filePath: string){
+      return this.graylogFilesystem.readFile(vscode.Uri.parse(`graylog:/${filePath}.grule`));
+    }
+    public updateRule(registeredRule:RuleField,updatedRule:any){
+      let readdata="";
+      if(updatedRule['source'] != (readdata=this.readRule(registeredRule.title).toString())){
+        this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/${registeredRule['title']}.grule`), Buffer.from(updatedRule['source']), { create: true, overwrite: true });
+        // let fIdx = vscode.workspace.textDocuments.findIndex((txtDocument)=> txtDocument.uri.toString() == `graylog:/${registeredRule.title}.grule`);
+
+        // vscode.workspace.textDocuments[fIdx]
+      }
+
+    }
+
+
 }
 
 export interface RuleField{

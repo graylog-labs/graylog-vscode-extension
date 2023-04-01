@@ -22,6 +22,11 @@
         "command": "graylog.workspaceInit",
         "title": "Setup Workspace",
         "category": "Graylog"
+      },
+      {
+        "command": "graylog.RereshWorkSpace",
+        "title": "Refresh rules from server",
+        "category": "Graylog"
       }
     ],
     "languages": [
