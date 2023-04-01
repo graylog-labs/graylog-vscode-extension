@@ -116,3 +116,6 @@ src/test/suite/index.ts
 src/test/suite/index.ts
 src/test/suite/extension.test.ts
 src/test/runTest.ts
+
+#out files
+out/
