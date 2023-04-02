@@ -11,11 +11,9 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "onLanguage:grule"
-  ],
   "main": "./out/extension.js",
   "showLanguageModeIcons": true,
+  
   "contributes": {
     "commands": [
       {
@@ -33,26 +31,26 @@
       {
         "id": "grule",
         "icon": {
-          "light": "resources/icons8-earth-64.png",
-          "dark": "resources/icons8-earth-64.png"
+          "light": "media/logo.png",
+          "dark": "media/logo.png"
         },
         "extensions": [
           ".grule"
         ],
-        "configuration": "language-configuration.json"
+        "configuration": "./language-configuration.json"
       }
     ],
     "grammars": [
       {
         "language": "grule",
         "scopeName": "source.grule",
-        "path": "syntaxes/grule.tmLanguage.json"
+        "path": "./syntaxes/grule.tmLanguage.json"
       }
     ],
     "snippets": [
       {
         "language": "grule",
-        "path": "snippets/grule.code-snippets"
+        "path": "./snippets/grule.code-snippets"
       }
     ],
     "colors": [
