@@ -6,22 +6,33 @@ const connectionpart_1 = require("./connectionpart");
 const fileSystemProvider_1 = require("./fileSystemProvider");
 const colorData = require('../themes/color');
 function activate(context) {
+    addColorSettings();
     const Graylog = new fileSystemProvider_1.GraylogFileSystemProvider();
     const connectpart = new connectionpart_1.ConnectionPart(Graylog, context.secrets);
-    addColorSettings();
     context.subscriptions.push(vscode.workspace.registerFileSystemProvider('graylog', Graylog, { isCaseSensitive: true }));
     let initialized = false;
     context.subscriptions.push(vscode.commands.registerCommand('graylog.workspaceInit', async () => {
         connectpart.clearworkspace();
     }));
+    context.subscriptions.push(vscode.commands.registerCommand('graylog.RereshWorkSpace', async () => {
+        connectpart.refreshWorkspace();
+    }));
     prepareForWork(connectpart, context.secrets);
     vscode.workspace.onDidChangeTextDocument((e) => {
         if (connectpart.apiUrl != "")
-            connectpart.onDidChange(e.document);
+            // e?.document.save().then((result)=>{
+            // 	if(result){
+            connectpart.onDidChange(e?.document);
+        // }
+        // })
     });
     vscode.window.onDidChangeActiveTextEditor(e => {
         if (connectpart.apiUrl != "" && e?.document)
+            // e?.document.save().then((result)=>{
+            // if(result){
             connectpart.onDidChange(e?.document);
+        // }
+        // })
     });
     vscode.workspace.onDidCreateFiles((e) => {
         e.files.map((file) => {
@@ -45,24 +56,7 @@ async function prepareForWork(connectpart, secretStorage) {
 function addColorSettings() {
     (async () => {
         const config = vscode.workspace.getConfiguration();
-        let tokenColorCustomizations = config.inspect('editor.tokenColorCustomizations')?.globalValue;
-        const tokenColor = [];
-        const colorDataLength = colorData.length;
-        const tokenColorLength = tokenColor.length;
-        for (let i = 0; i < colorDataLength; i++) {
-            const name = colorData[i].name;
-            let exist = false;
-            for (let j = 0; j < tokenColorLength; j++) {
-                if (tokenColor[j].name === name) {
-                    exist = true;
-                    break;
-                }
-            }
-            if (!exist) {
-                tokenColor.push(colorData[i]);
-            }
-        }
-        await config.update('editor.tokenColorCustomizations', tokenColorCustomizations, vscode.ConfigurationTarget.Global);
+        await config.update('editor.tokenColorCustomizations', colorData, vscode.ConfigurationTarget.Global);
     })();
 }
 //# sourceMappingURL=extension.js.map
