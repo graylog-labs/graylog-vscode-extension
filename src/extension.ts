@@ -2,22 +2,22 @@
 
 import * as vscode from 'vscode';
 
-import { DepNodeProvider, Item } from './nodeDependencies';
 import { ConnectionPart } from './connectionpart';
 import {GraylogFileSystemProvider} from './fileSystemProvider';
 import { CodelensProvider } from './CodelensProvider';
+import {addColorSettings} from './utils';
 
 const colorData = require('../themes/color');
+
 export function activate(context: vscode.ExtensionContext) {
 
-	addColorSettings();
+	addColorSettings(colorData);
+
 	const Graylog = new GraylogFileSystemProvider();
 	
 	const connectpart= new ConnectionPart(Graylog,context.secrets);
-	
-	context.subscriptions.push(vscode.workspace.registerFileSystemProvider('graylog', Graylog, { isCaseSensitive: true }));
-	let initialized = false;
 
+	context.subscriptions.push(vscode.workspace.registerFileSystemProvider('graylog', Graylog, { isCaseSensitive: true }));
 	
 	context.subscriptions.push(vscode.commands.registerCommand('graylog.workspaceInit', async () => {
 		connectpart.clearworkspace();
@@ -27,6 +27,10 @@ export function activate(context: vscode.ExtensionContext) {
 		connectpart.refreshWorkspace();
 	}));
 	
+	context.subscriptions.push(vscode.commands.registerCommand('graylog.settingApiInfo', async () => {
+		connectpart.writeSettingApiInfo();
+	}));
+
 	prepareForWork(connectpart,context.secrets);
 
 	vscode.workspace.onDidChangeTextDocument((e)=>{
@@ -57,6 +61,8 @@ export function activate(context: vscode.ExtensionContext) {
 		});
 	});
 
+
+
 }
 
 async function prepareForWork(connectpart:ConnectionPart,secretStorage:vscode.SecretStorage){
@@ -73,24 +79,3 @@ async function prepareForWork(connectpart:ConnectionPart,secretStorage:vscode.Se
 }
 
 
-function addColorSettings() {
-	(async () => {
-		const config = vscode.workspace.getConfiguration();
-		await config.update(
-			'editor.tokenColorCustomizations',
-			colorData,
-			vscode.ConfigurationTarget.Global,
-		);
-	})();
-}
-
-// "views": {
-// 	"package-explorer": [
-// 	  {
-// 		"id": "nodeDependencies",
-// 		"name": "Node Dependencies",
-// 		"icon": "media/dep.svg",
-// 		"contextualTitle": "Package Explorer"
-// 	  }
-// 	]
-//   },

@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.basename = exports.svgToUri = exports.replaceLinebreaks = exports.truncateString = void 0;
-const vscode_1 = require("vscode");
+exports.addColorSettings = exports.basename = exports.svgToUri = exports.replaceLinebreaks = exports.truncateString = void 0;
+const vscode = require("vscode");
 /**
  * Cut off string if it's longer than provided number of characters.
  */
@@ -21,7 +21,7 @@ exports.replaceLinebreaks = replaceLinebreaks;
  * Transform string svg to {@link Uri}
  */
 function svgToUri(svg) {
-    return vscode_1.Uri.parse(`data:image/svg+xml;utf8,${svg}`);
+    return vscode.Uri.parse(`data:image/svg+xml;utf8,${svg}`);
 }
 exports.svgToUri = svgToUri;
 /**
@@ -31,4 +31,11 @@ function basename(filePath) {
     return filePath.split(/[\\/]/).pop() || '';
 }
 exports.basename = basename;
+function addColorSettings(colorData) {
+    (async () => {
+        const config = vscode.workspace.getConfiguration();
+        await config.update('editor.tokenColorCustomizations', colorData, vscode.ConfigurationTarget.Global);
+    })();
+}
+exports.addColorSettings = addColorSettings;
 //# sourceMappingURL=utils.js.map

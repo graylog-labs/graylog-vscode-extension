@@ -3,22 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ConnectionPart = void 0;
 const vscode = require("vscode");
 const axios_1 = require("axios");
-const vscode_1 = require("vscode");
 const utils_1 = require("./utils");
 const constants_1 = require("./constants");
-const BASE_PATH = `${vscode?.extensions?.getExtension('pdragon.task-graylog')?.extensionPath}/resources/`;
-const ICON_PATH = 'error-inverse.svg';
-const errorForeground = new vscode_1.ThemeColor('graylog.errorForeground');
-const errorForegroundLight = new vscode_1.ThemeColor('graylog.errorForegroundLight');
-const errorMessageBackground = new vscode_1.ThemeColor('graylog.errorMessageBackground');
-const errorBackground = new vscode_1.ThemeColor('graylog.errorBackground');
-const errorBackgroundLight = new vscode_1.ThemeColor('graylog.errorBackgroundLight');
-const icon = vscode.window.createTextEditorDecorationType({
-    gutterIconPath: `${BASE_PATH}${ICON_PATH}`,
-    gutterIconSize: '80%',
-    isWholeLine: true,
-    backgroundColor: errorBackground
-});
 class ConnectionPart {
     constructor(graylogFilesystem, secretStorage) {
         this.graylogFilesystem = graylogFilesystem;
@@ -29,6 +15,7 @@ class ConnectionPart {
         this.workingDirectory = "";
         this.grules = [];
         this.errors = [];
+        this.apiInfoList = [];
     }
     async createRule(filename) {
         let response;
@@ -61,7 +48,14 @@ class ConnectionPart {
         }
     }
     async onDidChange(document) {
-        let title = document.fileName.substring(1).split('.')[0];
+        let lIdx = document.fileName.lastIndexOf('/');
+        let fileName = document.fileName.substring(lIdx);
+        let dIdx = fileName.lastIndexOf('.');
+        let title = fileName.substring(0, dIdx);
+        let extension = fileName.substring(dIdx);
+        if (fileName == `graylogSetting.json`) {
+            let value = JSON.parse(document.getText());
+        }
         let dindex = this.grules.findIndex((rule) => { return rule.title == title; });
         if (dindex == -1)
             return;
@@ -113,13 +107,13 @@ class ConnectionPart {
                 const decInstanceRenderOptions = {
                     after: {
                         contentText: (0, utils_1.truncateString)(" " + oneresult.reason, 40),
-                        color: errorForeground,
-                        backgroundColor: errorMessageBackground
+                        color: constants_1.errorForeground,
+                        backgroundColor: constants_1.errorMessageBackground
                     },
                     light: {
                         after: {
-                            backgroundColor: errorBackgroundLight,
-                            color: errorForegroundLight
+                            backgroundColor: constants_1.errorBackgroundLight,
+                            color: constants_1.errorForegroundLight
                         }
                     },
                 };
@@ -129,7 +123,7 @@ class ConnectionPart {
                 });
             }
         });
-        vscode.window.activeTextEditor?.setDecorations(icon, decorationOptions);
+        vscode.window.activeTextEditor?.setDecorations(constants_1.icon, decorationOptions);
     }
     async GetRuleSource(id) {
         try {
@@ -292,10 +286,6 @@ class ConnectionPart {
         vscode.workspace.workspaceFolders?.map(async (folder, index) => {
             if (folder.name == 'Graylog API') {
                 await this.secretStorage.store("reloaded", "yes");
-                // var directory = this.graylogFilesystem.readDirectory(vscode.Uri.parse('graylog:/'));
-                // directory.map((eachfile)=>{
-                //   this.graylogFilesystem.delete(vscode.Uri.parse(`graylog:/${eachfile}`))
-                // });
                 vscode.workspace.updateWorkspaceFolders(index, 1);
             }
         });
@@ -323,9 +313,46 @@ class ConnectionPart {
         let readdata = "";
         if (updatedRule['source'] != (readdata = this.readRule(registeredRule.title).toString())) {
             this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/${registeredRule['title']}.grule`), Buffer.from(updatedRule['source']), { create: true, overwrite: true });
-            // let fIdx = vscode.workspace.textDocuments.findIndex((txtDocument)=> txtDocument.uri.toString() == `graylog:/${registeredRule.title}.grule`);
-            // vscode.workspace.textDocuments[fIdx]
         }
+    }
+    //#region read and write apiInfo to storage
+    async readSettingApiInfo() {
+        const apiData = JSON.parse(this.graylogFilesystem.readFile(vscode.Uri.parse(`graylog:/graylogSetting.json`)).toString());
+        const apiCount = apiData["apiInfoList"].length ?? 0;
+        await this.secretStorage.store("apiCount", apiCount);
+        apiData["apiInfoList"].array.forEach(async (element, index) => {
+            await this.secretStorage.store(`api_${index}_apiHost`, element["apiHost"]);
+            await this.secretStorage.store(`api_${index}_token`, element["token"]);
+            await this.secretStorage.store(`api_${index}_name`, element["name"]);
+        });
+    }
+    async readSettingApiInfoFromString(data) {
+        const apiData = JSON.parse(data);
+        const apiCount = apiData["apiInfoList"].length ?? 0;
+        await this.secretStorage.store("apiCount", apiCount);
+        apiData["apiInfoList"].array.forEach(async (element, index) => {
+            await this.secretStorage.store(`api_${index}_apiHost`, element["apiHost"]);
+            await this.secretStorage.store(`api_${index}_token`, element["token"]);
+            await this.secretStorage.store(`api_${index}_name`, element["name"]);
+        });
+    }
+    async writeSettingApiInfo() {
+        const apis = [];
+        const count = parseInt((await this.secretStorage.get("apiCount")) ?? "0");
+        for (let i = 0; i < count; i++) {
+            let tempApiHost = await this.secretStorage.get(`api_${i}_apiHost`);
+            let tempToken = await this.secretStorage.get(`api_${i}_token`);
+            let tempName = await this.secretStorage.get(`api_${i}_name`);
+            apis.push({
+                "apiHost": tempApiHost,
+                "token": tempToken,
+                "name": tempName
+            });
+        }
+        this.apiInfoList = apis;
+        this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/graylogSetting.json`), Buffer.from(JSON.stringify({ "apiInfoList": apis })), { create: true, overwrite: true });
+        const doc = await vscode.workspace.openTextDocument(vscode.Uri.parse(`graylog:/graylogSetting.json`));
+        await vscode.window.showTextDocument(doc);
     }
 }
 exports.ConnectionPart = ConnectionPart;

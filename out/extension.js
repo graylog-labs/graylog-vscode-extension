@@ -4,18 +4,21 @@ exports.activate = void 0;
 const vscode = require("vscode");
 const connectionpart_1 = require("./connectionpart");
 const fileSystemProvider_1 = require("./fileSystemProvider");
+const utils_1 = require("./utils");
 const colorData = require('../themes/color');
 function activate(context) {
-    addColorSettings();
+    (0, utils_1.addColorSettings)(colorData);
     const Graylog = new fileSystemProvider_1.GraylogFileSystemProvider();
     const connectpart = new connectionpart_1.ConnectionPart(Graylog, context.secrets);
     context.subscriptions.push(vscode.workspace.registerFileSystemProvider('graylog', Graylog, { isCaseSensitive: true }));
-    let initialized = false;
     context.subscriptions.push(vscode.commands.registerCommand('graylog.workspaceInit', async () => {
         connectpart.clearworkspace();
     }));
     context.subscriptions.push(vscode.commands.registerCommand('graylog.RereshWorkSpace', async () => {
         connectpart.refreshWorkspace();
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('graylog.settingApiInfo', async () => {
+        connectpart.writeSettingApiInfo();
     }));
     prepareForWork(connectpart, context.secrets);
     vscode.workspace.onDidChangeTextDocument((e) => {
@@ -52,11 +55,5 @@ async function prepareForWork(connectpart, secretStorage) {
     if (await secretStorage.get("reloaded") == "yes") {
         connectpart.LoginInitialize();
     }
-}
-function addColorSettings() {
-    (async () => {
-        const config = vscode.workspace.getConfiguration();
-        await config.update('editor.tokenColorCustomizations', colorData, vscode.ConfigurationTarget.Global);
-    })();
 }
 //# sourceMappingURL=extension.js.map
