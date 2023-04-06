@@ -11,3 +11,9 @@ export interface sourceError{
     reason: string,
     type: string
 }
+
+export interface apiInstance{
+    apiHost: string,
+    token: string,
+    name: string
+}

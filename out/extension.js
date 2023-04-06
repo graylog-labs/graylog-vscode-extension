@@ -11,26 +11,45 @@ function activate(context) {
     const Graylog = new fileSystemProvider_1.GraylogFileSystemProvider();
     const connectpart = new connectionpart_1.ConnectionPart(Graylog, context.secrets);
     context.subscriptions.push(vscode.workspace.registerFileSystemProvider('graylog', Graylog, { isCaseSensitive: true }));
-    context.subscriptions.push(vscode.commands.registerCommand('graylog.workspaceInit', async () => {
-        connectpart.clearworkspace();
-    }));
+    // context.subscriptions.push(vscode.commands.registerCommand('graylog.workspaceInit', async () => {
+    // 	connectpart.clearworkspace();
+    // }));
     context.subscriptions.push(vscode.commands.registerCommand('graylog.RereshWorkSpace', async () => {
-        connectpart.refreshWorkspace();
+        //	connectpart.refreshWorkspace();
     }));
     context.subscriptions.push(vscode.commands.registerCommand('graylog.settingApiInfo', async () => {
-        connectpart.writeSettingApiInfo();
+        await connectpart.initSettings();
+        connectpart.openSettings();
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('graylog.selectInstances', async () => {
+        await connectpart.initSettings();
+        const items = [];
+        if (connectpart.apis.apiInfoList && connectpart.apis.apiInfoList.length > 0) {
+            for (let i = 0; i < connectpart.apis.apiInfoList.length; i++) {
+                items.push({
+                    label: connectpart.apis.apiInfoList[i]['apiHostUrl'],
+                    index: i
+                });
+            }
+            const result = await vscode.window.showQuickPick(items, {
+                canPickMany: true,
+                placeHolder: 'Select Servers',
+            });
+            if (result) {
+                connectpart.clearworkspace(result);
+            }
+        }
     }));
     prepareForWork(connectpart, context.secrets);
     vscode.workspace.onDidChangeTextDocument((e) => {
-        if (connectpart.apiUrl != "")
-            // e?.document.save().then((result)=>{
-            // 	if(result){
-            connectpart.onDidChange(e?.document);
+        // e?.document.save().then((result)=>{
+        // 	if(result){
+        connectpart.onDidChange(e?.document);
         // }
         // })
     });
     vscode.window.onDidChangeActiveTextEditor(e => {
-        if (connectpart.apiUrl != "" && e?.document)
+        if (e?.document)
             // e?.document.save().then((result)=>{
             // if(result){
             connectpart.onDidChange(e?.document);
@@ -49,11 +68,12 @@ function activate(context) {
 }
 exports.activate = activate;
 async function prepareForWork(connectpart, secretStorage) {
-    if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0 && vscode.workspace.workspaceFolders[0].name == 'Graylog API') {
+    if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0 && vscode.workspace.workspaceFolders[0].uri.toString().includes("graylog")) {
+        await connectpart.initSettings();
         connectpart.prepareForwork();
     }
-    if (await secretStorage.get("reloaded") == "yes") {
-        connectpart.LoginInitialize();
-    }
+    // if(await secretStorage.get("reloaded") == "yes"){
+    // 	connectpart.LoginInitialize();
+    // }
 }
 //# sourceMappingURL=extension.js.map

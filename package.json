@@ -17,11 +17,6 @@
   "contributes": {
     "commands": [
       {
-        "command": "graylog.workspaceInit",
-        "title": "Setup Workspace",
-        "category": "Graylog"
-      },
-      {
         "command": "graylog.RereshWorkSpace",
         "title": "Refresh rules from server",
         "category": "Graylog"
@@ -29,6 +24,11 @@
       {
         "command": "graylog.settingApiInfo",
         "title": "Setting of API",
+        "category": "Graylog"
+      },
+      {
+        "command": "graylog.selectInstances",
+        "title": "Select Instances",
         "category": "Graylog"
       }
     ],
