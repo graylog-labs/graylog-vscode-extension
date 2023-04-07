@@ -1,3 +1,5 @@
+import * as vscode from 'vscode';
+
 export function newFileSource(title:string):string{
     return `rule "${title}"
     when
@@ -16,3 +18,18 @@ then
 end`;
 }
 
+
+export const BASE_PATH = `${vscode?.extensions?.getExtension('pdragon.task-graylog')?.extensionPath}/resources/`;
+export const ICON_PATH='error-inverse.svg';
+export const errorForeground = new vscode.ThemeColor('graylog.errorForeground');
+export const errorForegroundLight = new vscode.ThemeColor('graylog.errorForegroundLight');
+export const errorMessageBackground: vscode.ThemeColor | undefined = new vscode.ThemeColor('graylog.errorMessageBackground');
+export const errorBackground: vscode.ThemeColor | undefined = new vscode.ThemeColor('graylog.errorBackground');
+export const errorBackgroundLight: vscode.ThemeColor | undefined = new vscode.ThemeColor('graylog.errorBackgroundLight');
+
+export const icon = vscode.window.createTextEditorDecorationType({
+  gutterIconPath:`${BASE_PATH}${ICON_PATH}`,
+  gutterIconSize:'80%',
+  isWholeLine: true,
+  backgroundColor: errorBackground
+});
