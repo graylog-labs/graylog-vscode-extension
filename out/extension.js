@@ -15,7 +15,7 @@ function activate(context) {
     // 	connectpart.clearworkspace();
     // }));
     context.subscriptions.push(vscode.commands.registerCommand('graylog.RereshWorkSpace', async () => {
-        //	connectpart.refreshWorkspace();
+        connectpart.refreshWorkspace();
     }));
     context.subscriptions.push(vscode.commands.registerCommand('graylog.settingApiInfo', async () => {
         await connectpart.initSettings();

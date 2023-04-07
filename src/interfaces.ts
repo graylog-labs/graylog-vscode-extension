@@ -13,7 +13,7 @@ export interface sourceError{
 }
 
 export interface apiInstance{
-    apiHost: string,
+    apiHostUrl: string,
     token: string,
     name: string
 }

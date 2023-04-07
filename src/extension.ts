@@ -24,7 +24,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// }));
 
 	context.subscriptions.push(vscode.commands.registerCommand('graylog.RereshWorkSpace', async () => {
-	//	connectpart.refreshWorkspace();
+		connectpart.refreshWorkspace();
 	}));
 	
 	context.subscriptions.push(vscode.commands.registerCommand('graylog.settingApiInfo', async () => {

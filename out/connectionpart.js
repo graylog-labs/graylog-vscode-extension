@@ -20,40 +20,42 @@ class ConnectionPart {
         this.apiSettingInfo = "";
     }
     async createRule(filename) {
-        /*
         let response;
-  
-        let title = filename;
-        try{
-          response = await axios.post(
-            `${this.apiUrl}/api/system/pipelines/rule`
-            ,{
-              title: title,
-              source:newFileSource(title),
-              description: title
-            },
-            {
-              headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-                'X-Requested-By':this.token
-              },
-              auth: {
-                username: this.token,
-                password: this.accountPassword
-              }
+        const firstSlashIndex = filename.indexOf('/');
+        const serverName = filename.substring(0, firstSlashIndex);
+        const newRulename = filename.substring(firstSlashIndex + 1);
+        const rootIndex = this.apis['apiInfoList'].findIndex((element) => {
+            return element.name == serverName;
+        });
+        if (rootIndex == -1)
+            return;
+        let title = newRulename;
+        try {
+            response = await axios_1.default.post(`${this.apis['apiInfoList'][rootIndex].apiHostUrl}/api/system/pipelines/rule`, {
+                title: title,
+                source: (0, constants_1.newFileSource)(title),
+                description: title
+            }, {
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-By': this.apis['apiInfoList'][rootIndex].token
+                },
+                auth: {
+                    username: this.apis['apiInfoList'][rootIndex].token,
+                    password: this.accountPassword
+                }
+            });
+            if (response.status == 200) {
+                this.wrilteFile(rootIndex, response.data);
             }
-          );
-  
-          if(response.status == 200){
-            this.wrilteFile(response.data);
-          }
-        }catch(e){
-          if(e.response?.data){
-            vscode.window.showErrorMessage("Failed to create");
-            this.graylogFilesystem.delete(vscode.Uri.parse(`graylog:/${filename}.grule`));
-          }
-        }*/
+        }
+        catch (e) {
+            if (e.response?.data) {
+                vscode.window.showErrorMessage("Failed to create");
+                this.graylogFilesystem.delete(vscode.Uri.parse(`graylog:/${filename}.grule`));
+            }
+        }
     }
     async onDidChange(document) {
         let lIdx = document.fileName.lastIndexOf('/');
@@ -302,27 +304,27 @@ class ConnectionPart {
         });
         vscode.workspace.updateWorkspaceFolders(0, removeCount, ...workSpaceFoldersToAdd);
     }
-    /*
-    public async refreshWorkspace(){
-      let tempRules = await this.GetAllRules();
-      tempRules.forEach((tmpRule)=>{
-        let fIdx = this.grules.findIndex((rule)=> rule['title'] == tmpRule['title']);
-        if(fIdx > -1){
-          this.updateRule(this.grules[fIdx],tmpRule);
-        }else{
-          this.wrilteFile(tmpRule);
-        }
-      });
-
+    async refreshWorkspace() {
+        this.indexes.forEach(async (indexNum, index) => {
+            let tempRules = await this.GetAllRules(this.apis['apiInfoList'][indexNum]['apiHostUrl'], this.apis['apiInfoList'][indexNum]['token']);
+            tempRules.forEach((tmpRule) => {
+                let fIdx = this.grules[index].findIndex((rule) => rule['title'] == tmpRule['title']);
+                if (fIdx > -1) {
+                    this.updateRule(indexNum, this.grules[index][fIdx], tmpRule);
+                }
+                else {
+                    this.wrilteFile(indexNum, tmpRule);
+                }
+            });
+        });
     }
-*/
-    readRule(filePath) {
-        return this.graylogFilesystem.readFile(vscode.Uri.parse(`graylog:/${filePath}.grule`));
+    readRule(rootIndex, filePath) {
+        return this.graylogFilesystem.readFile(vscode.Uri.parse(`graylog:/${this.apis['apiInfoList'][rootIndex]['name']}/${filePath}.grule`));
     }
-    updateRule(registeredRule, updatedRule) {
+    updateRule(rootIndex, registeredRule, updatedRule) {
         let readdata = "";
-        if (updatedRule['source'] != (readdata = this.readRule(registeredRule.title).toString())) {
-            this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/${registeredRule['title']}.grule`), Buffer.from(updatedRule['source']), { create: true, overwrite: true });
+        if (updatedRule['source'] != (readdata = this.readRule(rootIndex, registeredRule.title).toString())) {
+            this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/${this.apis['apiInfoList'][rootIndex]['name']}/${registeredRule['title']}.grule`), Buffer.from(updatedRule['source']), { create: true, overwrite: true });
         }
     }
     //#region read and write apiInfo to storage
