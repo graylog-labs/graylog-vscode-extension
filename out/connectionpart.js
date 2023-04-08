@@ -307,7 +307,7 @@ class ConnectionPart {
     async refreshWorkspace() {
         this.indexes.forEach(async (indexNum, index) => {
             let tempRules = await this.GetAllRules(this.apis['apiInfoList'][indexNum]['apiHostUrl'], this.apis['apiInfoList'][indexNum]['token']);
-            tempRules.forEach((tmpRule) => {
+            tempRules.forEach((tmpRule, tempIndex) => {
                 let fIdx = this.grules[index].findIndex((rule) => rule['title'] == tmpRule['title']);
                 if (fIdx > -1) {
                     this.updateRule(indexNum, this.grules[index][fIdx], tmpRule);

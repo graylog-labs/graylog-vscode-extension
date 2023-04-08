@@ -13,8 +13,30 @@
   ],
   "main": "./out/extension.js",
   "showLanguageModeIcons": true,
-  
+  "enabledApiProposals": [
+		"treeItemCheckbox"
+	],
+
   "contributes": {
+    "viewsContainers": {
+			"activitybar": [
+				{
+					"id": "package-explorer",
+					"title": "Package Explorer",
+					"icon": "media/logo.svg"
+				}
+			]
+		},
+    "views": {
+      "package-explorer":[
+        {
+					"id": "graylog",
+					"name": "Graylog",
+					"icon": "media/logo.svg",
+					"contextualTitle": "Graylog Explorer"
+				}
+      ]
+    },
     "commands": [
       {
         "command": "graylog.RereshWorkSpace",
@@ -163,7 +185,6 @@
     "@types/glob": "^8.1.0",
     "@types/mocha": "^10.0.1",
     "@types/node": "16.x",
-    "@types/vscode": "^1.76.0",
     "@typescript-eslint/eslint-plugin": "^5.53.0",
     "@typescript-eslint/parser": "^5.53.0",
     "@vscode/test-electron": "^2.2.3",

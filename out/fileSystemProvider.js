@@ -28,13 +28,82 @@ class Directory {
     }
 }
 exports.Directory = Directory;
+const vscode_1 = require("vscode");
+class MyTreeItem extends vscode.TreeItem2 {
+    constructor(label, checkboxState, pathUri, state, command, iconPath) {
+        super(label, vscode_1.TreeItemCollapsibleState.Collapsed);
+        this.command = command;
+        this.iconPath = iconPath;
+        this.collapsibleState = state;
+        this.checkboxState = checkboxState;
+        this.pathUri = pathUri;
+        this.command = command;
+        this.iconPath = iconPath;
+    }
+}
 class GraylogFileSystemProvider {
     constructor() {
+        this._onDidChangeTreeData = new vscode.EventEmitter();
+        this.onDidChangeTreeData = this._onDidChangeTreeData.event;
+        this.workspaceRoot = vscode.Uri.parse('graylog:/');
+        //////////////////////////////////
+        ////file system
+        //////////////////////////////////
         this.root = new Directory('');
         // --- manage file events
         this._emitter = new vscode.EventEmitter();
         this._bufferedEvents = [];
         this.onDidChangeFile = this._emitter.event;
+    }
+    getTreeItem(element) {
+        return element;
+    }
+    getChildren(element) {
+        if (element) {
+            return Promise.resolve(this.getDepsInPackageJson(element.pathUri));
+        }
+        else {
+            if (this.pathExists(this.workspaceRoot)) {
+                return Promise.resolve(this.getDepsInPackageJson(this.workspaceRoot));
+            }
+            else {
+                return Promise.resolve([]);
+            }
+        }
+    }
+    getDepsInPackageJson(pathUri) {
+        if (this.pathExists(pathUri)) {
+            const toDep = (moduleName) => {
+                if (moduleName[1] == vscode.FileType.Directory) {
+                    return new MyTreeItem(moduleName[0], vscode.TreeItemCheckboxState.Unchecked, vscode.Uri.joinPath(pathUri, moduleName[0]), vscode.TreeItemCollapsibleState.Collapsed);
+                }
+                else {
+                    return new MyTreeItem(moduleName[0], vscode.TreeItemCheckboxState.Unchecked, vscode.Uri.joinPath(pathUri, moduleName[0]), vscode.TreeItemCollapsibleState.None, {
+                        command: "vscode.open",
+                        title: 'openDocument',
+                        arguments: [vscode.Uri.joinPath(pathUri, moduleName[0])]
+                    }, path.join(__filename, '..', '..', 'media', 'logo.svg'));
+                }
+            };
+            const items = [];
+            this.readDirectory(pathUri).forEach((element) => {
+                if (element[0] !== 'graylogSetting.json')
+                    items.push(toDep(element));
+            });
+            return items;
+        }
+        else {
+            return [];
+        }
+    }
+    getParent(element) {
+        throw new Error('Method not implemented.');
+    }
+    resolveTreeItem(item, element, token) {
+        throw new Error('Method not implemented.');
+    }
+    refresh() {
+        this._onDidChangeTreeData.fire();
     }
     // --- manage file metadata
     stat(uri) {
@@ -144,6 +213,24 @@ class GraylogFileSystemProvider {
             return entry;
         }
         throw vscode.FileSystemError.FileNotADirectory(uri);
+    }
+    pathExists(uri) {
+        try {
+            this._lookupAsDirectory(uri, false);
+            return true;
+        }
+        catch {
+            return false;
+        }
+    }
+    IsDirectory(uri) {
+        try {
+            this._lookupAsDirectory(uri, false);
+            return true;
+        }
+        catch {
+            return false;
+        }
     }
     _lookupAsFile(uri, silent) {
         const entry = this._lookup(uri, silent);
