@@ -50,16 +50,14 @@ export type Entry = File | Directory;
 
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 
-class MyTreeItem extends vscode.TreeItem2 {
-  constructor(label: string, checkboxState: vscode.TreeItemCheckboxState,pathUri: vscode.Uri, state: vscode.TreeItemCollapsibleState,public readonly command?: vscode.Command,public readonly iconPath?:string) {
+class MyTreeItem extends vscode.TreeItem {
+  constructor(label: string, checked: boolean,pathUri: vscode.Uri, state: vscode.TreeItemCollapsibleState,public readonly command?: vscode.Command,public readonly iconPath?:string) {
     super(label, TreeItemCollapsibleState.Collapsed);
 	this.collapsibleState = state;
-    this.checkboxState = checkboxState;
 	this.pathUri = pathUri;
     this.command = command;
 	this.iconPath = iconPath;
   }
-
   pathUri: vscode.Uri;
 }
 
@@ -89,9 +87,9 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 		if (this.pathExists(pathUri)) {
 			const toDep = (moduleName: [string, vscode.FileType]): MyTreeItem => {
 				if(moduleName[1] == vscode.FileType.Directory){
-					return new MyTreeItem(moduleName[0],vscode.TreeItemCheckboxState.Unchecked, vscode.Uri.joinPath(pathUri,moduleName[0]), vscode.TreeItemCollapsibleState.Collapsed);
+					return new MyTreeItem(moduleName[0],false, vscode.Uri.joinPath(pathUri,moduleName[0]), vscode.TreeItemCollapsibleState.Collapsed);
 				}else{
-					return new MyTreeItem(moduleName[0],vscode.TreeItemCheckboxState.Unchecked,vscode.Uri.joinPath(pathUri,moduleName[0]), vscode.TreeItemCollapsibleState.None, {
+					return new MyTreeItem(moduleName[0],false,vscode.Uri.joinPath(pathUri,moduleName[0]), vscode.TreeItemCollapsibleState.None, {
 						command: "vscode.open",
 						title: 'openDocument',
 						arguments: [vscode.Uri.joinPath(pathUri, moduleName[0])]
