@@ -13,8 +13,26 @@
   ],
   "main": "./out/extension.js",
   "showLanguageModeIcons": true,
-  
   "contributes": {
+    "viewsContainers": {
+			"activitybar": [
+				{
+					"id": "package-explorer",
+					"title": "Package Explorer",
+					"icon": "media/logo.svg"
+				}
+			]
+		},
+    "views": {
+      "package-explorer":[
+        {
+					"id": "graylog",
+					"name": "Graylog",
+					"icon": "media/logo.svg",
+					"contextualTitle": "Graylog Explorer"
+				}
+      ]
+    },
     "commands": [
       {
         "command": "graylog.RereshWorkSpace",

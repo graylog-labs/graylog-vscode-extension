@@ -2,14 +2,19 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.activate = void 0;
 const vscode = require("vscode");
-const connectionpart_1 = require("./connectionpart");
+const graylog_1 = require("./graylog");
 const fileSystemProvider_1 = require("./fileSystemProvider");
 const utils_1 = require("./utils");
 const colorData = require('../themes/color');
 function activate(context) {
     (0, utils_1.addColorSettings)(colorData);
     const Graylog = new fileSystemProvider_1.GraylogFileSystemProvider();
-    const connectpart = new connectionpart_1.ConnectionPart(Graylog, context.secrets);
+    vscode.window.registerTreeDataProvider('graylog', Graylog);
+    const connectpart = new graylog_1.ConnectionPart(Graylog, context.secrets);
+    vscode.window.createTreeView('graylog', {
+        treeDataProvider: Graylog,
+        canSelectMany: true,
+    });
     context.subscriptions.push(vscode.workspace.registerFileSystemProvider('graylog', Graylog, { isCaseSensitive: true }));
     // context.subscriptions.push(vscode.commands.registerCommand('graylog.workspaceInit', async () => {
     // 	connectpart.clearworkspace();

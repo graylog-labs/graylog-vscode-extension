@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { ConnectionPart } from './connectionpart';
+import { ConnectionPart } from './graylog';
 /**
  * CodelensProvider
  */
