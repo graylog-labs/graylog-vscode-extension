@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { GraylogFileSystemProvider } from './fileSystemProvider';
 import axios from 'axios';
 import { DecorationInstanceRenderOptions } from 'vscode';
-import { replaceLinebreaks, truncateString } from './utils';
+import { replaceLinebreaks, truncateString,getPathSeparator } from './utils';
 import { newFileSource, errorForeground, errorMessageBackground, errorBackgroundLight, errorForegroundLight, icon} from './constants';
 import {RuleField, sourceError, apiInstance} from './interfaces';
 
@@ -23,6 +23,7 @@ export class ConnectionPart{
 
     public apiSettingInfo:string = "";
     
+    pathSeparator=getPathSeparator();
     constructor(private graylogFilesystem: GraylogFileSystemProvider,private readonly secretStorage:vscode.SecretStorage){
     }
 
@@ -30,7 +31,7 @@ export class ConnectionPart{
     public async createRule(filename:string){
       let response; 
 
-      const firstSlashIndex = filename.indexOf('/');
+      const firstSlashIndex = filename.indexOf(this.pathSeparator);
       const serverName = filename.substring(0,firstSlashIndex);
       const newRulename = filename.substring(firstSlashIndex+1);
       const rootIndex = this.apis['apiInfoList'].findIndex((element:apiInstance)=>{
@@ -71,8 +72,10 @@ export class ConnectionPart{
       }
     }
     public async onDidChange(document:vscode.TextDocument){
-      let lIdx = document.fileName.lastIndexOf('/');
+      let lIdx = document.fileName.lastIndexOf(this.pathSeparator);
       let  fileName = document.fileName.substring(lIdx+1);
+      if(fileName[0] === this.pathSeparator) fileName = fileName.substring(1);
+      
       let dIdx = fileName.lastIndexOf('.');
       let title= fileName.substring(0,dIdx);
       
@@ -87,7 +90,7 @@ export class ConnectionPart{
          } catch (error) {}
         return;
       }
-      const rootFolderName = document.fileName.split('/')[1];
+      const rootFolderName = document.fileName.split(this.pathSeparator)[1];
       let rootIndex = this.apis["apiInfoList"].findIndex((info:any)=>info['name']==rootFolderName);
       if(rootIndex==-1) return;
 
@@ -262,7 +265,7 @@ export class ConnectionPart{
     }
 
     public wrilteFile(rootIndex:number,rule:any){
-      let paths = rule['title'].split('/');
+      let paths = rule['title'].split(/[\\/]/);
       let cumulative = "";
       let name = this.apis['apiInfoList'][rootIndex]['name'];
       if(paths.length > 1){
@@ -272,7 +275,6 @@ export class ConnectionPart{
         }
       }
       this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/${name}/${rule['title']}.grule`), Buffer.from(rule['source']), { create: true, overwrite: true });
-      
     }
     
     public async prepareForwork(){

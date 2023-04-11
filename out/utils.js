@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addColorSettings = exports.basename = exports.svgToUri = exports.replaceLinebreaks = exports.truncateString = void 0;
+exports.getPathSeparator = exports.addColorSettings = exports.basename = exports.svgToUri = exports.replaceLinebreaks = exports.truncateString = void 0;
 const vscode = require("vscode");
+const path = require('path');
 /**
  * Cut off string if it's longer than provided number of characters.
  */
@@ -38,4 +39,8 @@ function addColorSettings(colorData) {
     })();
 }
 exports.addColorSettings = addColorSettings;
+function getPathSeparator() {
+    return path.sep;
+}
+exports.getPathSeparator = getPathSeparator;
 //# sourceMappingURL=utils.js.map

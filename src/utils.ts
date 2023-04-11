@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-
+const path = require('path');
 /**
  * Cut off string if it's longer than provided number of characters.
  */
@@ -36,4 +36,8 @@ export function addColorSettings(colorData:any) {
 			vscode.ConfigurationTarget.Global,
 		);
 	})();
+}
+
+export function getPathSeparator():string{
+	return path.sep;
 }
