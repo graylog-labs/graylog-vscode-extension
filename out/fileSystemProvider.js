@@ -4,7 +4,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GraylogFileSystemProvider = exports.Directory = exports.File = void 0;
+exports.GraylogFileSystemProvider = exports.MyTreeItem = exports.Directory = exports.File = void 0;
 const path = require("path");
 const vscode = require("vscode");
 const interfaces_1 = require("./interfaces");
@@ -42,6 +42,7 @@ class MyTreeItem extends vscode.TreeItem {
         this.checked = checked;
     }
 }
+exports.MyTreeItem = MyTreeItem;
 class GraylogFileSystemProvider {
     constructor() {
         this.treeViewMode = interfaces_1.TreeViewModes.normalMode;
@@ -66,6 +67,9 @@ class GraylogFileSystemProvider {
         }
         this.refresh();
     }
+    onClickItem(element) {
+        this.updateCheckBox(element);
+    }
     getTreeItem(element) {
         if (element.collapsibleState === vscode_1.TreeItemCollapsibleState.Collapsed || element.collapsibleState === vscode_1.TreeItemCollapsibleState.Expanded) {
             return element;
@@ -74,21 +78,27 @@ class GraylogFileSystemProvider {
         if (this.treeViewMode === interfaces_1.TreeViewModes.normalMode) {
             treeItem.iconPath = path.join(__filename, '..', '..', 'media', 'logo.svg');
             treeItem.command = element.command;
-            treeItem.contextValue = element.contextValue;
+            treeItem.contextValue = "normal";
             element.checked = false;
         }
         else {
+            treeItem.command = {
+                command: "graylog.treeItemClick",
+                title: 'Click',
+                arguments: [element]
+            };
             if (element.checked) {
+                treeItem.contextValue = "treeItemContext";
                 treeItem.iconPath = path.join(__filename, '..', '..', 'resources', 'checkbox-check.svg');
             }
             else {
+                treeItem.contextValue = "normalTreeItem";
                 treeItem.iconPath = path.join(__filename, '..', '..', 'resources', 'checkbox-blank.svg');
             }
         }
         return treeItem;
     }
     async getChildren(element) {
-        console.log(element);
         try {
             if (element) {
                 return Promise.resolve(this.getDepsInPackageJson(element.pathUri));
@@ -142,10 +152,8 @@ class GraylogFileSystemProvider {
         this._onDidChangeTreeData.fire(item);
     }
     updateCheckBox(selected) {
-        if (this.treeViewMode === interfaces_1.TreeViewModes.selectMode && selected instanceof MyTreeItem) {
-            /////
-            this.refresh(selected);
-        }
+        selected.checked = !selected.checked;
+        this.refresh(selected);
     }
     // --- manage file metadata
     stat(uri) {

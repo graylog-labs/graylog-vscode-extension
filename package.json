@@ -69,6 +69,16 @@
           "light": "resources/multiselect-enable.svg",
 					"dark": "resources/multiselect-enable.svg"
 				}
+      },
+      {
+        "command": "graylog.exportToContext",
+        "title":"Export To Content Pack",
+        "category": "Graylog"
+      },
+      {
+        "command": "graylog.treeItemClick",
+        "title":"Event for selected TreeItem",
+        "category": "Graylog"
       }
     ],
     "menus":{
@@ -93,6 +103,12 @@
           "group": "navigation",
 					"when": "view == graylog"
 				}
+      ],
+      "view/item/context": [
+        {
+          "command": "graylog.exportToContext",
+          "when": "view == graylog && viewItem == treeItemContext"
+        }
       ]
     },
     "languages": [

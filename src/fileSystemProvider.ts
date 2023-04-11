@@ -50,7 +50,7 @@ export type Entry = File | Directory;
 
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 
-class MyTreeItem extends vscode.TreeItem {
+export class MyTreeItem extends vscode.TreeItem {
   constructor(label: string, checked: boolean,pathUri: vscode.Uri, state: vscode.TreeItemCollapsibleState,public readonly command?: vscode.Command,public readonly iconPath?:string) {
     super(label, TreeItemCollapsibleState.Collapsed);
 	this.collapsibleState = state;
@@ -80,6 +80,10 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 		}
 		this.refresh();
 	}
+	onClickItem(element:MyTreeItem){
+		this.updateCheckBox(element);
+	}
+	
 	getTreeItem(element: MyTreeItem): vscode.TreeItem | Thenable<vscode.TreeItem> {
 		if(element.collapsibleState === TreeItemCollapsibleState.Collapsed || element.collapsibleState === TreeItemCollapsibleState.Expanded){
 			return element;
@@ -89,19 +93,26 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 		if(this.treeViewMode === TreeViewModes.normalMode){
 			treeItem.iconPath = path.join(__filename,'..','..','media','logo.svg');
 			treeItem.command = element.command;
-			treeItem.contextValue = element.contextValue;
+			treeItem.contextValue = "normal";
 			element.checked = false;
 		}else{
+			treeItem.command = {
+				command: "graylog.treeItemClick",
+				title: 'Click',
+				arguments: [element]
+			};
+
 			if(element.checked){
+				treeItem.contextValue = "treeItemContext";
 				treeItem.iconPath = path.join(__filename,'..','..','resources','checkbox-check.svg');
 			}else{
+				treeItem.contextValue = "normalTreeItem";
 				treeItem.iconPath = path.join(__filename,'..','..','resources','checkbox-blank.svg');
 			}
 		}
 		return treeItem;
 	}
 	async getChildren(element?: MyTreeItem | undefined): Promise<MyTreeItem[]> {
-		console.log(element);
 		try {
 			if (element) {
 				return Promise.resolve(this.getDepsInPackageJson(element.pathUri));
@@ -155,10 +166,8 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 	}
 
 	updateCheckBox(selected: MyTreeItem):void{
-		if(this.treeViewMode === TreeViewModes.selectMode && selected instanceof MyTreeItem){
-			/////
-			this.refresh(selected);
-		}
+		selected.checked = !selected.checked;
+		this.refresh(selected);
 	}
 	//////////////////////////////////
 	////file system

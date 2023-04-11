@@ -12,13 +12,11 @@ function activate(context) {
     const connectpart = new graylog_1.ConnectionPart(graylog, context.secrets);
     context.subscriptions.push(vscode.workspace.registerFileSystemProvider('graylog', graylog, { isCaseSensitive: true }));
     const treeview = vscode.window.createTreeView('graylog', { treeDataProvider: graylog });
-    treeview.onDidChangeSelection((event) => {
-        const selected = event.selection[0];
-        selected.checked = !selected.checked;
-        graylog.updateCheckBox(selected);
-    });
     context.subscriptions.push(vscode.commands.registerCommand('graylog.RereshWorkSpace', async () => {
         connectpart.refreshWorkspace();
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('graylog.treeItemClick', (item) => {
+        graylog.onClickItem(item);
     }));
     context.subscriptions.push(vscode.commands.registerCommand('graylog.settingApiInfo', async () => {
         await connectpart.initSettings();
@@ -45,6 +43,10 @@ function activate(context) {
     }));
     context.subscriptions.push(vscode.commands.registerCommand('graylog.MultiSelect', () => {
         graylog.updateTreeViewMode();
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('graylog.exportToContext', () => {
+        ///action for export to content pack
+        vscode.commands.executeCommand("graylog.MultiSelect");
     }));
     vscode.workspace.onDidChangeTextDocument((e) => {
         connectpart.onDidChange(e?.document);

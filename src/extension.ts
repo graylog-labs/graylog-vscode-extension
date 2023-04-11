@@ -6,7 +6,7 @@ import { ConnectionPart } from './graylog';
 import {GraylogFileSystemProvider} from './fileSystemProvider';
 import { CodelensProvider } from './CodelensProvider';
 import {addColorSettings} from './utils';
-
+import { MyTreeItem } from './fileSystemProvider';
 const colorData = require('../themes/color');
 
 export function activate(context: vscode.ExtensionContext) {
@@ -19,15 +19,13 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(vscode.workspace.registerFileSystemProvider('graylog', graylog, { isCaseSensitive: true }));
 	const treeview = vscode.window.createTreeView('graylog',{ treeDataProvider:graylog });
-
-	treeview.onDidChangeSelection((event)=>{
-		const selected = event.selection[0];
-		selected.checked = !selected.checked;
-		graylog.updateCheckBox(selected);
-	});
-
+	
 	context.subscriptions.push(vscode.commands.registerCommand('graylog.RereshWorkSpace', async () => {
 		connectpart.refreshWorkspace();
+	}));
+	
+	context.subscriptions.push(vscode.commands.registerCommand('graylog.treeItemClick',(item:MyTreeItem)=>{
+		graylog.onClickItem(item);
 	}));
 	
 	context.subscriptions.push(vscode.commands.registerCommand('graylog.settingApiInfo', async () => {
@@ -60,6 +58,12 @@ export function activate(context: vscode.ExtensionContext) {
 	
 	context.subscriptions.push(vscode.commands.registerCommand('graylog.MultiSelect', () => {
 		graylog.updateTreeViewMode();
+	}));
+
+	context.subscriptions.push(vscode.commands.registerCommand('graylog.exportToContext', () => {
+		///action for export to content pack
+		
+		vscode.commands.executeCommand("graylog.MultiSelect");
 	}));
 
 	vscode.workspace.onDidChangeTextDocument((e)=>{
