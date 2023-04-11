@@ -57,17 +57,22 @@ class GraylogFileSystemProvider {
     getTreeItem(element) {
         return element;
     }
-    getChildren(element) {
-        if (element) {
-            return Promise.resolve(this.getDepsInPackageJson(element.pathUri));
-        }
-        else {
-            if (this.pathExists(this.workspaceRoot)) {
-                return Promise.resolve(this.getDepsInPackageJson(this.workspaceRoot));
+    async getChildren(element) {
+        try {
+            if (element) {
+                return Promise.resolve(this.getDepsInPackageJson(element.pathUri));
             }
             else {
-                return Promise.resolve([]);
+                if (this.pathExists(this.workspaceRoot)) {
+                    return Promise.resolve(this.getDepsInPackageJson(this.workspaceRoot));
+                }
+                else {
+                    return Promise.resolve([]);
+                }
             }
+        }
+        catch (error) {
+            return Promise.resolve([]);
         }
     }
     getDepsInPackageJson(pathUri) {

@@ -37,19 +37,64 @@
       {
         "command": "graylog.RereshWorkSpace",
         "title": "Refresh rules from server",
-        "category": "Graylog"
+        "category": "Graylog",
+        "icon": {
+					"light": "resources/light/refresh.svg",
+					"dark": "resources/dark/refresh.svg"
+				}
+      },
+      {
+        "command": "graylog.MultiSelect",
+        "title": "Toggle MultiSelect",
+        "category": "Graylog",
+        "icon": {
+          "light": "resources/checkbox-check.svg",
+					"dark": "resources/checkbox-check.svg"
+				}
       },
       {
         "command": "graylog.settingApiInfo",
         "title": "Setting of API",
-        "category": "Graylog"
+        "category": "Graylog",
+        "icon": {
+					"light": "resources/setting.svg",
+					"dark": "resources/setting.svg"
+				}
       },
       {
         "command": "graylog.selectInstances",
         "title": "Select Instances",
-        "category": "Graylog"
+        "category": "Graylog",
+        "icon": {
+          "light": "resources/multiselect-enable.svg",
+					"dark": "resources/multiselect-enable.svg"
+				}
       }
     ],
+    "menus":{
+      "view/title": [
+        {
+					"command": "graylog.RereshWorkSpace",
+          "group": "navigation",
+					"when": "view == graylog"
+				},
+        {
+					"command": "graylog.MultiSelect",
+          "group": "navigation",
+					"when": "view == graylog"
+				},
+        {
+					"command": "graylog.settingApiInfo",
+          "group": "navigation",
+					"when": "view == graylog"
+				},
+        {
+					"command": "graylog.selectInstances",
+          "group": "navigation",
+					"when": "view == graylog"
+				}
+      ]
+    },
     "languages": [
       {
         "id": "grule",

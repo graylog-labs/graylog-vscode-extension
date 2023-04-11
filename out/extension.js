@@ -11,10 +11,6 @@ function activate(context) {
     const Graylog = new fileSystemProvider_1.GraylogFileSystemProvider();
     vscode.window.registerTreeDataProvider('graylog', Graylog);
     const connectpart = new graylog_1.ConnectionPart(Graylog, context.secrets);
-    vscode.window.createTreeView('graylog', {
-        treeDataProvider: Graylog,
-        canSelectMany: true,
-    });
     context.subscriptions.push(vscode.workspace.registerFileSystemProvider('graylog', Graylog, { isCaseSensitive: true }));
     // context.subscriptions.push(vscode.commands.registerCommand('graylog.workspaceInit', async () => {
     // 	connectpart.clearworkspace();

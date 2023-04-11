@@ -70,16 +70,19 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 	getTreeItem(element: MyTreeItem): vscode.TreeItem | Thenable<vscode.TreeItem> {
 		return element;
 	}
-	getChildren(element?: MyTreeItem | undefined): vscode.ProviderResult<MyTreeItem[]> {
-		if (element) {
-			return Promise.resolve(this.getDepsInPackageJson(element.pathUri));
-		} else {
-			
-			if (this.pathExists(this.workspaceRoot)) {
-				return Promise.resolve(this.getDepsInPackageJson(this.workspaceRoot));
+	async getChildren(element?: MyTreeItem | undefined): Promise<MyTreeItem[]> {
+		try {
+			if (element) {
+				return Promise.resolve(this.getDepsInPackageJson(element.pathUri));
 			} else {
-				return Promise.resolve([]);
-			}
+				if (this.pathExists(this.workspaceRoot)) {
+					return Promise.resolve(this.getDepsInPackageJson(this.workspaceRoot));
+				} else {
+					return Promise.resolve([]);
+				}
+			}			
+		} catch (error) {
+			return Promise.resolve([]);
 		}
 	}
 
@@ -116,7 +119,7 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 		throw new Error('Method not implemented.');
 	}
 	
-	refresh(): void {
+	public refresh(): void {
 		this._onDidChangeTreeData.fire();
 	}
 
