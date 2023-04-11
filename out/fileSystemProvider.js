@@ -7,6 +7,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.GraylogFileSystemProvider = exports.Directory = exports.File = void 0;
 const path = require("path");
 const vscode = require("vscode");
+const interfaces_1 = require("./interfaces");
 class File {
     constructor(name) {
         this.type = vscode.FileType.File;
@@ -38,10 +39,12 @@ class MyTreeItem extends vscode.TreeItem {
         this.pathUri = pathUri;
         this.command = command;
         this.iconPath = iconPath;
+        this.checked = checked;
     }
 }
 class GraylogFileSystemProvider {
     constructor() {
+        this.treeViewMode = interfaces_1.TreeViewModes.normalMode;
         this._onDidChangeTreeData = new vscode.EventEmitter();
         this.onDidChangeTreeData = this._onDidChangeTreeData.event;
         this.workspaceRoot = vscode.Uri.parse('graylog:/');
@@ -54,10 +57,38 @@ class GraylogFileSystemProvider {
         this._bufferedEvents = [];
         this.onDidChangeFile = this._emitter.event;
     }
+    updateTreeViewMode() {
+        if (this.treeViewMode === interfaces_1.TreeViewModes.normalMode) {
+            this.treeViewMode = interfaces_1.TreeViewModes.selectMode;
+        }
+        else {
+            this.treeViewMode = interfaces_1.TreeViewModes.normalMode;
+        }
+        this.refresh();
+    }
     getTreeItem(element) {
-        return element;
+        if (element.collapsibleState === vscode_1.TreeItemCollapsibleState.Collapsed || element.collapsibleState === vscode_1.TreeItemCollapsibleState.Expanded) {
+            return element;
+        }
+        const treeItem = new vscode.TreeItem(element.label ?? "", element.collapsibleState);
+        if (this.treeViewMode === interfaces_1.TreeViewModes.normalMode) {
+            treeItem.iconPath = path.join(__filename, '..', '..', 'media', 'logo.svg');
+            treeItem.command = element.command;
+            treeItem.contextValue = element.contextValue;
+            element.checked = false;
+        }
+        else {
+            if (element.checked) {
+                treeItem.iconPath = path.join(__filename, '..', '..', 'resources', 'checkbox-check.svg');
+            }
+            else {
+                treeItem.iconPath = path.join(__filename, '..', '..', 'resources', 'checkbox-blank.svg');
+            }
+        }
+        return treeItem;
     }
     async getChildren(element) {
+        console.log(element);
         try {
             if (element) {
                 return Promise.resolve(this.getDepsInPackageJson(element.pathUri));
@@ -78,7 +109,7 @@ class GraylogFileSystemProvider {
     getDepsInPackageJson(pathUri) {
         if (this.pathExists(pathUri)) {
             const toDep = (moduleName) => {
-                if (moduleName[1] == vscode.FileType.Directory) {
+                if (moduleName[1] === vscode.FileType.Directory) {
                     return new MyTreeItem(moduleName[0], false, vscode.Uri.joinPath(pathUri, moduleName[0]), vscode.TreeItemCollapsibleState.Collapsed);
                 }
                 else {
@@ -91,8 +122,9 @@ class GraylogFileSystemProvider {
             };
             const items = [];
             this.readDirectory(pathUri).forEach((element) => {
-                if (element[0] !== 'graylogSetting.json')
+                if (element[0] !== 'graylogSetting.json') {
                     items.push(toDep(element));
+                }
             });
             return items;
         }
@@ -106,8 +138,14 @@ class GraylogFileSystemProvider {
     resolveTreeItem(item, element, token) {
         throw new Error('Method not implemented.');
     }
-    refresh() {
-        this._onDidChangeTreeData.fire();
+    refresh(item) {
+        this._onDidChangeTreeData.fire(item);
+    }
+    updateCheckBox(selected) {
+        if (this.treeViewMode === interfaces_1.TreeViewModes.selectMode && selected instanceof MyTreeItem) {
+            /////
+            this.refresh(selected);
+        }
     }
     // --- manage file metadata
     stat(uri) {
@@ -227,7 +265,7 @@ class GraylogFileSystemProvider {
             return false;
         }
     }
-    IsDirectory(uri) {
+    isDirectory(uri) {
         try {
             this._lookupAsDirectory(uri, false);
             return true;

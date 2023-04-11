@@ -6,7 +6,7 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
-
+import { TreeViewModes } from './interfaces';
 export class File implements vscode.FileStat {
 
 	type: vscode.FileType;
@@ -57,20 +57,51 @@ class MyTreeItem extends vscode.TreeItem {
 	this.pathUri = pathUri;
     this.command = command;
 	this.iconPath = iconPath;
+	this.checked = checked;
   }
+  checked: boolean;
   pathUri: vscode.Uri;
 }
 
 export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vscode.TreeDataProvider<MyTreeItem> {
+	
+	public treeViewMode:TreeViewModes = TreeViewModes.normalMode;
+
 	private _onDidChangeTreeData: vscode.EventEmitter<void | MyTreeItem | MyTreeItem[] | null | undefined> = new vscode.EventEmitter<void | MyTreeItem | MyTreeItem[] | null | undefined>();
 	readonly onDidChangeTreeData: vscode.Event<void | MyTreeItem | MyTreeItem[] | null | undefined> = this._onDidChangeTreeData.event;
 	
 	workspaceRoot: vscode.Uri= vscode.Uri.parse('graylog:/');
 	
+	updateTreeViewMode():void{
+		if(this.treeViewMode === TreeViewModes.normalMode){
+			this.treeViewMode = TreeViewModes.selectMode;
+		}else{
+			this.treeViewMode = TreeViewModes.normalMode;
+		}
+		this.refresh();
+	}
 	getTreeItem(element: MyTreeItem): vscode.TreeItem | Thenable<vscode.TreeItem> {
-		return element;
+		if(element.collapsibleState === TreeItemCollapsibleState.Collapsed || element.collapsibleState === TreeItemCollapsibleState.Expanded){
+			return element;
+		}
+
+		const treeItem = new vscode.TreeItem(element.label??"", element.collapsibleState);
+		if(this.treeViewMode === TreeViewModes.normalMode){
+			treeItem.iconPath = path.join(__filename,'..','..','media','logo.svg');
+			treeItem.command = element.command;
+			treeItem.contextValue = element.contextValue;
+			element.checked = false;
+		}else{
+			if(element.checked){
+				treeItem.iconPath = path.join(__filename,'..','..','resources','checkbox-check.svg');
+			}else{
+				treeItem.iconPath = path.join(__filename,'..','..','resources','checkbox-blank.svg');
+			}
+		}
+		return treeItem;
 	}
 	async getChildren(element?: MyTreeItem | undefined): Promise<MyTreeItem[]> {
+		console.log(element);
 		try {
 			if (element) {
 				return Promise.resolve(this.getDepsInPackageJson(element.pathUri));
@@ -89,7 +120,7 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 	private getDepsInPackageJson(pathUri: vscode.Uri): MyTreeItem[] {
 		if (this.pathExists(pathUri)) {
 			const toDep = (moduleName: [string, vscode.FileType]): MyTreeItem => {
-				if(moduleName[1] == vscode.FileType.Directory){
+				if(moduleName[1] === vscode.FileType.Directory){
 					return new MyTreeItem(moduleName[0],false, vscode.Uri.joinPath(pathUri,moduleName[0]), vscode.TreeItemCollapsibleState.Collapsed);
 				}else{
 					return new MyTreeItem(moduleName[0],false,vscode.Uri.joinPath(pathUri,moduleName[0]), vscode.TreeItemCollapsibleState.None, {
@@ -97,14 +128,14 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 						title: 'openDocument',
 						arguments: [vscode.Uri.joinPath(pathUri, moduleName[0])]
 					},path.join(__filename,'..','..','media','logo.svg'));
-
 				}
 			};
 
 			const items: MyTreeItem[]= [];
 			this.readDirectory(pathUri).forEach((element)=>{
-				if(element[0] !== 'graylogSetting.json')
-						items.push(toDep(element));
+				if(element[0] !== 'graylogSetting.json'){
+					items.push(toDep(element));
+				}
 			});
 			return items;
 		} else {
@@ -119,10 +150,16 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 		throw new Error('Method not implemented.');
 	}
 	
-	public refresh(): void {
-		this._onDidChangeTreeData.fire();
+	public refresh(item?: MyTreeItem): void {
+		this._onDidChangeTreeData.fire(item);
 	}
 
+	updateCheckBox(selected: MyTreeItem):void{
+		if(this.treeViewMode === TreeViewModes.selectMode && selected instanceof MyTreeItem){
+			/////
+			this.refresh(selected);
+		}
+	}
 	//////////////////////////////////
 	////file system
 	//////////////////////////////////
@@ -271,7 +308,7 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 		}
 	}
 
-	private IsDirectory(uri:vscode.Uri):boolean{
+	private isDirectory(uri:vscode.Uri):boolean{
 		try{
 			this._lookupAsDirectory(uri,false);
 			return true;

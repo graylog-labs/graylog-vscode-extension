@@ -18,3 +18,8 @@ export interface apiInstance{
     token: string,
     name: string
 }
+
+export enum TreeViewModes{
+    normalMode =1,
+    selectMode =2
+}

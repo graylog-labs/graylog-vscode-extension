@@ -15,7 +15,6 @@ export class ConnectionPart{
 
     public accountPassword = "token";
     public workingDirectory="";
-    public indexString: string | undefined ="";
     indexes:number[]=[];
     public grules:RuleField[][] =[];
     public errors:sourceError[]=[];
@@ -24,9 +23,9 @@ export class ConnectionPart{
     public apiSettingInfo:string = "";
     
     pathSeparator=getPathSeparator();
+    
     constructor(private graylogFilesystem: GraylogFileSystemProvider,private readonly secretStorage:vscode.SecretStorage){
     }
-
 
     public async createRule(filename:string){
       let response; 
@@ -213,8 +212,6 @@ export class ConnectionPart{
       }
     }
     public async logInfoCheck(url: string, token:string):Promise<boolean>{
-      // let initapiurl:string = "";
-      // let inittoken:string = "";
       if(!(await this.testAPI(url))){
         return false;
       }      
@@ -225,10 +222,6 @@ export class ConnectionPart{
       return true;
     }
 
-    // public async restoreUserInfo(){
-    //   this.token = await this.secretStorage.get("graylogtoken")??"";
-    //   this.apiUrl = await this.secretStorage.get("graylogurl")??"";
-    // }
     public  async testAPI(apiPath:string):Promise<boolean>{
         try{
             const res  = await axios.get(apiPath);
@@ -285,17 +278,7 @@ export class ConnectionPart{
     }
     
     public async prepareForwork(){
-      this.indexString = await this.secretStorage.get("indexes");
-
-      if(!this.indexString){ return;}
-      const indexs:number[]=[];
-
-      this.indexString.split(',').forEach(data=>{
-        indexs.push(parseInt(data));
-      });
-
-      this.indexes = indexs;
-      indexs.forEach(async (num)=>{
+      this.indexes.forEach(async (num)=>{
         this.graylogFilesystem.createDirectory(vscode.Uri.parse(`graylog:/${this.apis['apiInfoList'][num]['name']}`));
         if(await this.logInfoCheck(this.apis['apiInfoList'][num]['apiHostUrl'],this.apis['apiInfoList'][num]['token'])){
           let rules =await this.getAllRules(this.apis['apiInfoList'][num]['apiHostUrl'],this.apis['apiInfoList'][num]['token']);
@@ -310,6 +293,8 @@ export class ConnectionPart{
           });
   
           this.grules.push(tempArray);
+        }else{
+          vscode.window.showErrorMessage("API Info is not correct. Please check again...");
         }
       });
       
@@ -337,32 +322,20 @@ export class ConnectionPart{
 
     
     public async clearworkspace(result:{label:any,index:number}[]){
-      this.indexString="";
-      const workSpaceFoldersToAdd:{ uri:vscode.Uri, name:string}[]=[];
-      
+      this.indexes = [];
       result.forEach(element => {
-        if(this.indexString !==undefined && this.indexString !==null){
-          if(this.indexString.length>0){
-            this.indexString+=",";
-          }
-          this.indexString+=element.index;
-          workSpaceFoldersToAdd.push({
-            uri:vscode.Uri.parse(`graylog:/${this.apis['apiInfoList'][element.index]['name']}`),
-            name:this.apis['apiInfoList'][element.index]['name']
-          })
-        }
+        this.indexes.push(element.index);
       });
-      
-      await this.secretStorage.store("indexes",this.indexString); // when vs code reloaded, restore the checked instances from this string
-      await this.secretStorage.store("reloaded","no");
 
-      let removeCount=0;
-      vscode.workspace.workspaceFolders?.map(async (folder, index)=>{
-        if(folder.uri.toString().includes('graylog:/')){
-          removeCount++;
-        }
+      vscode.workspace.saveAll().then(()=>{
+        vscode.commands.executeCommand('workbench.action.closeAllEditors').then(async ()=>{
+          for (const [name] of this.graylogFilesystem.readDirectory(vscode.Uri.parse('graylog:/'))) {
+            this.graylogFilesystem.delete(vscode.Uri.parse(`graylog:/${name}`));
+          }
+          await this.prepareForwork();
+          this.graylogFilesystem.refresh();
+        });
       });
-      vscode.workspace.updateWorkspaceFolders(0, removeCount, ...workSpaceFoldersToAdd);
     }
 
     
