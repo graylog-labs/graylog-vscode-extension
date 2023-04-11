@@ -12,18 +12,13 @@ const colorData = require('../themes/color');
 export function activate(context: vscode.ExtensionContext) {
 
 	addColorSettings(colorData);
-
+	
 	const Graylog = new GraylogFileSystemProvider();
 	
 	vscode.window.registerTreeDataProvider('graylog', Graylog);
 
 	const connectpart= new ConnectionPart(Graylog,context.secrets);
-	
-	vscode.window.createTreeView('graylog',{
-		treeDataProvider: Graylog,
-		canSelectMany: true,
 		
-	})
 	context.subscriptions.push(vscode.workspace.registerFileSystemProvider('graylog', Graylog, { isCaseSensitive: true }));
 	
 	// context.subscriptions.push(vscode.commands.registerCommand('graylog.workspaceInit', async () => {
@@ -93,8 +88,6 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 		});
 	});
-
-
 
 }
 

@@ -35,9 +35,11 @@ export class ConnectionPart{
       const serverName = filename.substring(0,firstSlashIndex);
       const newRulename = filename.substring(firstSlashIndex+1);
       const rootIndex = this.apis['apiInfoList'].findIndex((element:apiInstance)=>{
-        return element.name == serverName
-      })
-      if(rootIndex == -1) return;
+        return element.name === serverName;
+      });
+      if(rootIndex === -1) {
+        return;
+      }
 
       let title = newRulename;
       try{
@@ -61,7 +63,7 @@ export class ConnectionPart{
           }
         );
 
-        if(response.status == 200){
+        if(response.status === 200){
           this.wrilteFile(rootIndex,response.data);
         }
       }catch(e){
@@ -74,12 +76,13 @@ export class ConnectionPart{
     public async onDidChange(document:vscode.TextDocument){
       let lIdx = document.fileName.lastIndexOf(this.pathSeparator);
       let  fileName = document.fileName.substring(lIdx+1);
-      if(fileName[0] === this.pathSeparator) fileName = fileName.substring(1);
-      
+      if(fileName[0] === this.pathSeparator) {
+        fileName = fileName.substring(1);
+      }
       let dIdx = fileName.lastIndexOf('.');
       let title= fileName.substring(0,dIdx);
       
-      if(fileName == `graylogSetting.json`){
+      if(fileName === `graylogSetting.json`){
          let value="";
          try {
           if(value = JSON.parse(document.getText())){
@@ -91,25 +94,29 @@ export class ConnectionPart{
         return;
       }
       const rootFolderName = document.fileName.split(this.pathSeparator)[1];
-      let rootIndex = this.apis["apiInfoList"].findIndex((info:any)=>info['name']==rootFolderName);
-      if(rootIndex==-1) return;
-
+      let rootIndex = this.apis["apiInfoList"].findIndex((info:any)=>info['name'] === rootFolderName);
+      if(rootIndex === -1) {
+        return;
+      }
       const gIndex = this.indexes.findIndex((iIndex:number)=>{
-        if(this.apis['apiInfoList'][iIndex]['name'] == rootFolderName)
+        if(this.apis['apiInfoList'][iIndex]['name'] === rootFolderName){
           return true;
+        }
       });
 
-      if(gIndex == -1)
+      if(gIndex === -1){
         return;
+      }
 
-      let dindex = this.grules[gIndex].findIndex((rule)=>{return rule.title == title});
+      let dindex = this.grules[gIndex].findIndex((rule)=>{return rule.title === title;});
 
-      if(dindex == -1)
+      if(dindex === -1){
         return;
+      }
       
       
       let id = this.grules[gIndex][dindex].id;
-      let rulesource =await this.GetRuleSource(rootIndex,id);
+      let rulesource =await this.getRuleSource(rootIndex,id);
       rulesource['source']=document.getText();
       delete rulesource['errors'];
 
@@ -189,7 +196,7 @@ export class ConnectionPart{
       vscode.window.activeTextEditor?.setDecorations(icon,decorationOptions); 
     }
 
-    public async GetRuleSource(instanceIndex:number,id:string){
+    public async getRuleSource(instanceIndex:number,id:string){
       try{
         const response = await axios.get(`${this.apis['apiInfoList'][instanceIndex]['apiHostUrl']}/api/system/pipelines/rule/${id}`, {
           headers: {
@@ -205,7 +212,7 @@ export class ConnectionPart{
        }catch(e){
       }
     }
-    public async LogInfoCheck(url: string, token:string):Promise<boolean>{
+    public async logInfoCheck(url: string, token:string):Promise<boolean>{
       // let initapiurl:string = "";
       // let inittoken:string = "";
       if(!(await this.testAPI(url))){
@@ -225,9 +232,8 @@ export class ConnectionPart{
     public  async testAPI(apiPath:string):Promise<boolean>{
         try{
             const res  = await axios.get(apiPath);
-            if(res.status == 200)
-                return true;
-            else return false;
+            if(res.status === 200){    return true; }
+            else {return false;}
         }catch(e){
             return false;
         }
@@ -238,7 +244,8 @@ export class ConnectionPart{
             let path="";
             if(apiPath.includes("/api")){
                 path = apiPath.substring(0,apiPath.indexOf("/api"));
-            }else path = apiPath;
+            }else{
+             path = apiPath;}
 
             const res  = await axios.get(`${path}/api/cluster`, {
                 params: {
@@ -280,7 +287,7 @@ export class ConnectionPart{
     public async prepareForwork(){
       this.indexString = await this.secretStorage.get("indexes");
 
-      if(!this.indexString) return;
+      if(!this.indexString){ return;}
       const indexs:number[]=[];
 
       this.indexString.split(',').forEach(data=>{
@@ -290,8 +297,8 @@ export class ConnectionPart{
       this.indexes = indexs;
       indexs.forEach(async (num)=>{
         this.graylogFilesystem.createDirectory(vscode.Uri.parse(`graylog:/${this.apis['apiInfoList'][num]['name']}`));
-        if(await this.LogInfoCheck(this.apis['apiInfoList'][num]['apiHostUrl'],this.apis['apiInfoList'][num]['token'])){
-          let rules =await this.GetAllRules(this.apis['apiInfoList'][num]['apiHostUrl'],this.apis['apiInfoList'][num]['token']);
+        if(await this.logInfoCheck(this.apis['apiInfoList'][num]['apiHostUrl'],this.apis['apiInfoList'][num]['token'])){
+          let rules =await this.getAllRules(this.apis['apiInfoList'][num]['apiHostUrl'],this.apis['apiInfoList'][num]['token']);
           let tempArray:RuleField[]=[];
           rules.map((rule)=>{
             this.wrilteFile(num,rule);
@@ -305,9 +312,11 @@ export class ConnectionPart{
           this.grules.push(tempArray);
         }
       });
+      
+      this.graylogFilesystem.refresh();
     }
 
-    public async GetAllRules(url:string,token:string):Promise<[]>{
+    public async getAllRules(url:string,token:string):Promise<[]>{
       try{
         const response = await axios.get(`${url}/api/system/pipelines/rule`, {
           headers: {
@@ -332,9 +341,10 @@ export class ConnectionPart{
       const workSpaceFoldersToAdd:{ uri:vscode.Uri, name:string}[]=[];
       
       result.forEach(element => {
-        if(this.indexString!=undefined && this.indexString!=null){
-          if(this.indexString.length>0)
+        if(this.indexString !==undefined && this.indexString !==null){
+          if(this.indexString.length>0){
             this.indexString+=",";
+          }
           this.indexString+=element.index;
           workSpaceFoldersToAdd.push({
             uri:vscode.Uri.parse(`graylog:/${this.apis['apiInfoList'][element.index]['name']}`),
@@ -358,9 +368,9 @@ export class ConnectionPart{
     
     public async refreshWorkspace(){
       this.indexes.forEach(async (indexNum,index)=>{
-        let tempRules = await this.GetAllRules(this.apis['apiInfoList'][indexNum]['apiHostUrl'],this.apis['apiInfoList'][indexNum]['token']);
+        let tempRules = await this.getAllRules(this.apis['apiInfoList'][indexNum]['apiHostUrl'],this.apis['apiInfoList'][indexNum]['token']);
         tempRules.forEach((tmpRule, tempIndex)=>{
-          let fIdx = this.grules[index].findIndex((rule)=> rule['title'] == tmpRule['title']);
+          let fIdx = this.grules[index].findIndex((rule)=> rule['title'] === tmpRule['title']);
           if(fIdx > -1){
             this.updateRule(indexNum,this.grules[index][fIdx],tmpRule);
           }else{
@@ -368,6 +378,7 @@ export class ConnectionPart{
           }
         });  
       });
+  
     }
 
     public readRule(rootIndex:number,filePath: string){
@@ -375,7 +386,7 @@ export class ConnectionPart{
     }
     public updateRule(rootIndex:number,registeredRule:RuleField,updatedRule:any){
       let readdata="";
-      if(updatedRule['source'] != (readdata=this.readRule(rootIndex,registeredRule.title).toString())){
+      if(updatedRule['source'] !== (readdata=this.readRule(rootIndex,registeredRule.title).toString())){
         this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/${this.apis['apiInfoList'][rootIndex]['name']}/${registeredRule['title']}.grule`), Buffer.from(updatedRule['source']), { create: true, overwrite: true });
       }
     }
