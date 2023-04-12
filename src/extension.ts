@@ -60,9 +60,9 @@ export function activate(context: vscode.ExtensionContext) {
 		graylog.updateTreeViewMode();
 	}));
 
-	context.subscriptions.push(vscode.commands.registerCommand('graylog.exportToContext', () => {
+	context.subscriptions.push(vscode.commands.registerCommand('graylog.exportToContext',async () => {
 		///action for export to content pack
-		
+		await connectpart.createContentPack();
 		vscode.commands.executeCommand("graylog.MultiSelect");
 	}));
 

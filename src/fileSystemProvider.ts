@@ -72,6 +72,14 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 	
 	workspaceRoot: vscode.Uri= vscode.Uri.parse('graylog:/');
 	
+	selected: MyTreeItem[]=[];
+	hasChildren(item:MyTreeItem):boolean{
+		if(item.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed || item.collapsibleState === vscode.TreeItemCollapsibleState.Expanded){
+		  return true;
+		}
+		return false;
+	}
+
 	updateTreeViewMode():void{
 		if(this.treeViewMode === TreeViewModes.normalMode){
 			this.treeViewMode = TreeViewModes.selectMode;
@@ -110,6 +118,18 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 				treeItem.iconPath = path.join(__filename,'..','..','resources','checkbox-blank.svg');
 			}
 		}
+
+		let index = this.selected.findIndex((item)=>item.pathUri === element.pathUri);
+		if(index === -1){
+			if(element.checked){
+				this.selected.push(element);
+			}
+		}else{
+			if(!element.checked){
+				this.selected.splice(index,1);
+			}
+		}
+
 		return treeItem;
 	}
 	async getChildren(element?: MyTreeItem | undefined): Promise<MyTreeItem[]> {
@@ -157,6 +177,7 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 	getParent?(element: MyTreeItem): vscode.ProviderResult<MyTreeItem> {
 		throw new Error('Method not implemented.');
 	}
+	
 	resolveTreeItem?(item: vscode.TreeItem, element: MyTreeItem, token: vscode.CancellationToken): vscode.ProviderResult<vscode.TreeItem> {
 		throw new Error('Method not implemented.');
 	}
