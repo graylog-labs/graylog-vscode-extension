@@ -49,6 +49,7 @@ class GraylogFileSystemProvider {
         this._onDidChangeTreeData = new vscode.EventEmitter();
         this.onDidChangeTreeData = this._onDidChangeTreeData.event;
         this.workspaceRoot = vscode.Uri.parse('graylog:/');
+        this.selected = [];
         //////////////////////////////////
         ////file system
         //////////////////////////////////
@@ -57,6 +58,12 @@ class GraylogFileSystemProvider {
         this._emitter = new vscode.EventEmitter();
         this._bufferedEvents = [];
         this.onDidChangeFile = this._emitter.event;
+    }
+    hasChildren(item) {
+        if (item.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed || item.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
+            return true;
+        }
+        return false;
     }
     updateTreeViewMode() {
         if (this.treeViewMode === interfaces_1.TreeViewModes.normalMode) {
@@ -94,6 +101,17 @@ class GraylogFileSystemProvider {
             else {
                 treeItem.contextValue = "normalTreeItem";
                 treeItem.iconPath = path.join(__filename, '..', '..', 'resources', 'checkbox-blank.svg');
+            }
+        }
+        let index = this.selected.findIndex((item) => item.pathUri === element.pathUri);
+        if (index === -1) {
+            if (element.checked) {
+                this.selected.push(element);
+            }
+        }
+        else {
+            if (!element.checked) {
+                this.selected.splice(index, 1);
             }
         }
         return treeItem;

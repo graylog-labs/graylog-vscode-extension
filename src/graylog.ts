@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { GraylogFileSystemProvider } from './fileSystemProvider';
+import { GraylogFileSystemProvider, MyTreeItem } from './fileSystemProvider';
 import { DecorationInstanceRenderOptions } from 'vscode';
 import { replaceLinebreaks, truncateString,getPathSeparator } from './utils';
 import { newFileSource, errorForeground, errorMessageBackground, errorBackgroundLight, errorForegroundLight, icon} from './constants';
@@ -28,9 +28,8 @@ export class ConnectionPart{
       this.api = new API();
     }
 
+    
     public async createRule(filename:string){
-      let response;
-
       const firstSlashIndex = filename.indexOf(this.pathSeparator);
       const serverName = filename.substring(0,firstSlashIndex);
       const newRulename = filename.substring(firstSlashIndex+1);
@@ -52,36 +51,11 @@ export class ConnectionPart{
           this.graylogFilesystem.delete(vscode.Uri.parse(`graylog:/${filename}.grule`));     
           return;
       }
-      
-        // response = await axios.post(
-        //   `${this.apis['apiInfoList'][rootIndex].apiHostUrl}/api/system/pipelines/rule`
-        //   ,{
-        //     title: title,
-        //     source:newFileSource(title),
-        //     description: title
-        //   },
-        //   {
-        //     headers: {
-        //       Accept: 'application/json',
-        //       'Content-Type': 'application/json',
-        //       'X-Requested-By':this.apis['apiInfoList'][rootIndex].token
-        //     },
-        //     auth: {
-        //       username: this.apis['apiInfoList'][rootIndex].token,
-        //       password: this.accountPassword
-        //     }
-        //   }
-        // );
-
-      //   if(response.status === 200){
-      //     this.wrilteFile(rootIndex,response.data);
-      //   }
-      // }catch(e){
-       
-      // }
     }
     
     public async onDidChange(document:vscode.TextDocument){
+      await this.chekcInfo();
+
       let lIdx = document.fileName.lastIndexOf(this.pathSeparator);
       let  fileName = document.fileName.substring(lIdx+1);
       if(fileName[0] === this.pathSeparator) {
@@ -168,8 +142,6 @@ export class ConnectionPart{
         }
           
       });
-
-
       vscode.window.activeTextEditor?.setDecorations(icon,decorationOptions); 
     }
 
@@ -299,6 +271,56 @@ export class ConnectionPart{
       const doc =await vscode.workspace.openTextDocument(vscode.Uri.parse(`graylog:/graylogSetting.json`));
       await vscode.window.showTextDocument(doc);
     }
+
+    async chekcInfo(){
+      if(!this.apis['apiInfoList']){
+        await this.readSettingApiInfo();
+      }
+    }
     //#endregion
 
+
+    //#region createContentPacktype:"pipeline_rule",
+                // id
+    async createContentPack(){
+      const items:MyTreeItem[]=this.graylogFilesystem.selected;
+
+      const ids:string[]=[];
+      if(items.length>0){
+        items.forEach((rule)=>{
+            const id =this.getRuleId(rule.pathUri);
+            if(id){
+              ids.push(id);
+            }  
+        });
+      }
+      
+      let rootFolderName = items[0].pathUri.path.split(/[\\|/]/)[1];
+      const rootIndex = this.apis["apiInfoList"].findIndex((info:any)=>info['name'] === rootFolderName);
+      await this.api.createContentPack(rootIndex,ids);
+      // await this.api.createContentPack(rootIndex);
+    }
+
+    getRuleId(uri:vscode.Uri):string | undefined{
+      let title = uri.path.substring(1);;
+      let rootFolderName = uri.path.split(/[\\|/]/)[1];
+      
+      
+      title = title.replace(rootFolderName,"").substring(1).replace(/[\\|/]/,'/').replace(".grule","");
+      const rootIndex = this.apis["apiInfoList"].findIndex((info:any)=>info['name'] === rootFolderName);
+
+      const gIndex = this.indexes.findIndex((iIndex:number)=>{
+        if(this.apis['apiInfoList'][iIndex]['name'] === rootFolderName){
+          return true;
+        }
+      });
+
+      for(const item of this.grules[gIndex]){
+        if(item.title === title){
+          return item.id;
+        }
+      }
+      return undefined;
+    }
+    //#endregion
   }

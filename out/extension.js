@@ -44,8 +44,9 @@ function activate(context) {
     context.subscriptions.push(vscode.commands.registerCommand('graylog.MultiSelect', () => {
         graylog.updateTreeViewMode();
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('graylog.exportToContext', () => {
+    context.subscriptions.push(vscode.commands.registerCommand('graylog.exportToContext', async () => {
         ///action for export to content pack
+        await connectpart.createContentPack();
         vscode.commands.executeCommand("graylog.MultiSelect");
     }));
     vscode.workspace.onDidChangeTextDocument((e) => {

@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { newFileSource } from './constants';
 import { sourceError } from './interfaces';
+import { MyTreeItem } from './fileSystemProvider';
 export class API{
 
     accountPassword = "token";
@@ -144,5 +145,58 @@ export class API{
             return response.data;
           }
         return null;
+    }
+//,
+    async createContentPack(rootIndex:number,items:string[]){
+      const apiUrl =`${this.apis['apiInfoList'][rootIndex].apiHostUrl}/api/system/content_packs`;
+      const entries:any[] =[];
+      items.forEach(item=>entries.push({
+        type:"pipeline_rule",
+        id:item
+      }));
+      
+      let response="";
+      // try {
+        response = await axios.post(
+          apiUrl
+          ,{
+            name:"test",
+            description: "This is my test pack",
+            content:entries,
+          },
+          {
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+              'X-Requested-By':this.apis['apiInfoList'][rootIndex].token
+            },
+            auth: {
+              username: this.apis['apiInfoList'][rootIndex].token,
+              password: "token"
+            }
+          }
+        );
+      // } catch (error) {
+        
+      // }
+      
+      // if(response.status === 200){
+      //   return response.data;
+      // }
+
+//'http://localhost:9000/api/system/content_packs'
+      // response =await axios.post(url,{title:'title'},
+      // {
+      //   headers:{
+      //       Accept: 'application/json',
+      //       'Content-Type': 'application/json',
+      //       'X-Requested-By':this.apis['apiInfoList'][rootIndex].token
+      //   },
+      //   auth: {
+      //       username: this.apis['apiInfoList'][rootIndex].token,
+      //       password: this.accountPassword
+      //     }
+      // });
+      // console.log(response);
     }
 }
