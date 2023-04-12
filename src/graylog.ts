@@ -323,4 +323,40 @@ export class ConnectionPart{
       return undefined;
     }
     //#endregion
+
+    //#region
+    async saveToLocalFolder(item:MyTreeItem){
+      const uri = await vscode.window.showOpenDialog({
+        canSelectFolders: true,
+        canSelectFiles: false,
+        canSelectMany: false,
+        openLabel:'Select Folder'
+      });
+
+      if (uri) {
+        this.saveFilrOrFolder(item,uri[0]);
+      }
+    }
+
+    async saveFilrOrFolder(item:MyTreeItem, fileUri:vscode.Uri){
+      if(this.graylogFilesystem.hasChildren(item)){
+        vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(fileUri,...this.getFileOrFolderPath(item.pathUri)));
+        const items=await this.graylogFilesystem.getChildren(item);
+        for(const treeItem of items){
+          await this.saveFilrOrFolder(treeItem,fileUri);
+        }
+      }else{
+        vscode.workspace.fs.writeFile(vscode.Uri.joinPath(fileUri,...this.getFileOrFolderPath(item.pathUri)),this.graylogFilesystem.readFile(item.pathUri));
+      }
+    }
+
+    getFileOrFolderPath(uri:vscode.Uri):string[]{
+      let fpath = uri.path;
+      if(fpath[0] === '\\' || fpath[0]==='/'){
+        fpath = fpath.substring(1);
+      }
+      const paths = fpath.split(/[\\|/]/); 
+      return paths;
+    }
+    //#endregion
   }

@@ -80,6 +80,15 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 		return false;
 	}
 
+	getChildDepth(uri:vscode.Uri):number{
+		let folderpath = uri.path;
+		if(folderpath[0] === "/" || folderpath[0] === "\\"){
+			folderpath = folderpath.substring(1);
+		}
+
+		return folderpath.split(/[\\|/]/).length;
+	}
+
 	updateTreeViewMode():void{
 		if(this.treeViewMode === TreeViewModes.normalMode){
 			this.treeViewMode = TreeViewModes.selectMode;
@@ -94,6 +103,10 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 	
 	getTreeItem(element: MyTreeItem): vscode.TreeItem | Thenable<vscode.TreeItem> {
 		if(element.collapsibleState === TreeItemCollapsibleState.Collapsed || element.collapsibleState === TreeItemCollapsibleState.Expanded){
+			if(this.getChildDepth(element.pathUri) === 1){
+				element.contextValue = "serverInstance";
+			}
+
 			return element;
 		}
 
@@ -130,6 +143,7 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 			}
 		}
 
+		
 		return treeItem;
 	}
 	async getChildren(element?: MyTreeItem | undefined): Promise<MyTreeItem[]> {
