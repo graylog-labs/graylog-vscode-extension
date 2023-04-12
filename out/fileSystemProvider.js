@@ -65,6 +65,13 @@ class GraylogFileSystemProvider {
         }
         return false;
     }
+    getChildDepth(uri) {
+        let folderpath = uri.path;
+        if (folderpath[0] === "/" || folderpath[0] === "\\") {
+            folderpath = folderpath.substring(1);
+        }
+        return folderpath.split(/[\\|/]/).length;
+    }
     updateTreeViewMode() {
         if (this.treeViewMode === interfaces_1.TreeViewModes.normalMode) {
             this.treeViewMode = interfaces_1.TreeViewModes.selectMode;
@@ -79,6 +86,9 @@ class GraylogFileSystemProvider {
     }
     getTreeItem(element) {
         if (element.collapsibleState === vscode_1.TreeItemCollapsibleState.Collapsed || element.collapsibleState === vscode_1.TreeItemCollapsibleState.Expanded) {
+            if (this.getChildDepth(element.pathUri) === 1) {
+                element.contextValue = "serverInstance";
+            }
             return element;
         }
         const treeItem = new vscode.TreeItem(element.label ?? "", element.collapsibleState);
