@@ -6,7 +6,7 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
-
+import { TreeViewModes } from './interfaces';
 export class File implements vscode.FileStat {
 
 	type: vscode.FileType;
@@ -50,25 +50,87 @@ export type Entry = File | Directory;
 
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 
-class MyTreeItem extends vscode.TreeItem {
+export class MyTreeItem extends vscode.TreeItem {
   constructor(label: string, checked: boolean,pathUri: vscode.Uri, state: vscode.TreeItemCollapsibleState,public readonly command?: vscode.Command,public readonly iconPath?:string) {
     super(label, TreeItemCollapsibleState.Collapsed);
 	this.collapsibleState = state;
 	this.pathUri = pathUri;
     this.command = command;
 	this.iconPath = iconPath;
+	this.checked = checked;
   }
+  checked: boolean;
   pathUri: vscode.Uri;
 }
 
 export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vscode.TreeDataProvider<MyTreeItem> {
+	
+	public treeViewMode:TreeViewModes = TreeViewModes.normalMode;
+
 	private _onDidChangeTreeData: vscode.EventEmitter<void | MyTreeItem | MyTreeItem[] | null | undefined> = new vscode.EventEmitter<void | MyTreeItem | MyTreeItem[] | null | undefined>();
 	readonly onDidChangeTreeData: vscode.Event<void | MyTreeItem | MyTreeItem[] | null | undefined> = this._onDidChangeTreeData.event;
 	
 	workspaceRoot: vscode.Uri= vscode.Uri.parse('graylog:/');
 	
+	selected: MyTreeItem[]=[];
+	hasChildren(item:MyTreeItem):boolean{
+		if(item.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed || item.collapsibleState === vscode.TreeItemCollapsibleState.Expanded){
+		  return true;
+		}
+		return false;
+	}
+
+	updateTreeViewMode():void{
+		if(this.treeViewMode === TreeViewModes.normalMode){
+			this.treeViewMode = TreeViewModes.selectMode;
+		}else{
+			this.treeViewMode = TreeViewModes.normalMode;
+		}
+		this.refresh();
+	}
+	onClickItem(element:MyTreeItem){
+		this.updateCheckBox(element);
+	}
+	
 	getTreeItem(element: MyTreeItem): vscode.TreeItem | Thenable<vscode.TreeItem> {
-		return element;
+		if(element.collapsibleState === TreeItemCollapsibleState.Collapsed || element.collapsibleState === TreeItemCollapsibleState.Expanded){
+			return element;
+		}
+
+		const treeItem = new vscode.TreeItem(element.label??"", element.collapsibleState);
+		if(this.treeViewMode === TreeViewModes.normalMode){
+			treeItem.iconPath = path.join(__filename,'..','..','media','logo.svg');
+			treeItem.command = element.command;
+			treeItem.contextValue = "normal";
+			element.checked = false;
+		}else{
+			treeItem.command = {
+				command: "graylog.treeItemClick",
+				title: 'Click',
+				arguments: [element]
+			};
+
+			if(element.checked){
+				treeItem.contextValue = "treeItemContext";
+				treeItem.iconPath = path.join(__filename,'..','..','resources','checkbox-check.svg');
+			}else{
+				treeItem.contextValue = "normalTreeItem";
+				treeItem.iconPath = path.join(__filename,'..','..','resources','checkbox-blank.svg');
+			}
+		}
+
+		let index = this.selected.findIndex((item)=>item.pathUri === element.pathUri);
+		if(index === -1){
+			if(element.checked){
+				this.selected.push(element);
+			}
+		}else{
+			if(!element.checked){
+				this.selected.splice(index,1);
+			}
+		}
+
+		return treeItem;
 	}
 	async getChildren(element?: MyTreeItem | undefined): Promise<MyTreeItem[]> {
 		try {
@@ -89,7 +151,7 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 	private getDepsInPackageJson(pathUri: vscode.Uri): MyTreeItem[] {
 		if (this.pathExists(pathUri)) {
 			const toDep = (moduleName: [string, vscode.FileType]): MyTreeItem => {
-				if(moduleName[1] == vscode.FileType.Directory){
+				if(moduleName[1] === vscode.FileType.Directory){
 					return new MyTreeItem(moduleName[0],false, vscode.Uri.joinPath(pathUri,moduleName[0]), vscode.TreeItemCollapsibleState.Collapsed);
 				}else{
 					return new MyTreeItem(moduleName[0],false,vscode.Uri.joinPath(pathUri,moduleName[0]), vscode.TreeItemCollapsibleState.None, {
@@ -97,14 +159,14 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 						title: 'openDocument',
 						arguments: [vscode.Uri.joinPath(pathUri, moduleName[0])]
 					},path.join(__filename,'..','..','media','logo.svg'));
-
 				}
 			};
 
 			const items: MyTreeItem[]= [];
 			this.readDirectory(pathUri).forEach((element)=>{
-				if(element[0] !== 'graylogSetting.json')
-						items.push(toDep(element));
+				if(element[0] !== 'graylogSetting.json'){
+					items.push(toDep(element));
+				}
 			});
 			return items;
 		} else {
@@ -115,14 +177,19 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 	getParent?(element: MyTreeItem): vscode.ProviderResult<MyTreeItem> {
 		throw new Error('Method not implemented.');
 	}
+	
 	resolveTreeItem?(item: vscode.TreeItem, element: MyTreeItem, token: vscode.CancellationToken): vscode.ProviderResult<vscode.TreeItem> {
 		throw new Error('Method not implemented.');
 	}
 	
-	public refresh(): void {
-		this._onDidChangeTreeData.fire();
+	public refresh(item?: MyTreeItem): void {
+		this._onDidChangeTreeData.fire(item);
 	}
 
+	updateCheckBox(selected: MyTreeItem):void{
+		selected.checked = !selected.checked;
+		this.refresh(selected);
+	}
 	//////////////////////////////////
 	////file system
 	//////////////////////////////////
@@ -271,7 +338,7 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 		}
 	}
 
-	private IsDirectory(uri:vscode.Uri):boolean{
+	private isDirectory(uri:vscode.Uri):boolean{
 		try{
 			this._lookupAsDirectory(uri,false);
 			return true;

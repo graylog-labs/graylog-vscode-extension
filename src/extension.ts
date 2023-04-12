@@ -6,27 +6,26 @@ import { ConnectionPart } from './graylog';
 import {GraylogFileSystemProvider} from './fileSystemProvider';
 import { CodelensProvider } from './CodelensProvider';
 import {addColorSettings} from './utils';
-
+import { MyTreeItem } from './fileSystemProvider';
 const colorData = require('../themes/color');
 
 export function activate(context: vscode.ExtensionContext) {
 
 	addColorSettings(colorData);
 	
-	const Graylog = new GraylogFileSystemProvider();
-	
-	vscode.window.registerTreeDataProvider('graylog', Graylog);
+	const graylog = new GraylogFileSystemProvider();
 
-	const connectpart= new ConnectionPart(Graylog,context.secrets);
-		
-	context.subscriptions.push(vscode.workspace.registerFileSystemProvider('graylog', Graylog, { isCaseSensitive: true }));
-	
-	// context.subscriptions.push(vscode.commands.registerCommand('graylog.workspaceInit', async () => {
-	// 	connectpart.clearworkspace();
-	// }));
+	const connectpart = new ConnectionPart(graylog,context.secrets);
 
+	context.subscriptions.push(vscode.workspace.registerFileSystemProvider('graylog', graylog, { isCaseSensitive: true }));
+	const treeview = vscode.window.createTreeView('graylog',{ treeDataProvider:graylog });
+	
 	context.subscriptions.push(vscode.commands.registerCommand('graylog.RereshWorkSpace', async () => {
 		connectpart.refreshWorkspace();
+	}));
+	
+	context.subscriptions.push(vscode.commands.registerCommand('graylog.treeItemClick',(item:MyTreeItem)=>{
+		graylog.onClickItem(item);
 	}));
 	
 	context.subscriptions.push(vscode.commands.registerCommand('graylog.settingApiInfo', async () => {
@@ -55,35 +54,33 @@ export function activate(context: vscode.ExtensionContext) {
 				connectpart.clearworkspace(result);
 			}
 		}
-		
 	}));
 	
-	prepareForWork(connectpart,context.secrets);
+	context.subscriptions.push(vscode.commands.registerCommand('graylog.MultiSelect', () => {
+		graylog.updateTreeViewMode();
+	}));
 
-	
+	context.subscriptions.push(vscode.commands.registerCommand('graylog.exportToContext',async () => {
+		///action for export to content pack
+		await connectpart.createContentPack();
+		vscode.commands.executeCommand("graylog.MultiSelect");
+	}));
 
 	vscode.workspace.onDidChangeTextDocument((e)=>{
-			// e?.document.save().then((result)=>{
-			// 	if(result){
-					connectpart.onDidChange(e?.document);
-				// }
-			// })
+		connectpart.onDidChange(e?.document);
 	});
 	
 	vscode.window.onDidChangeActiveTextEditor(e=>{
-		if(e?.document)
-			// e?.document.save().then((result)=>{
-				// if(result){
-					connectpart.onDidChange(e?.document);
-				// }
-			// })
+		if(e?.document){
+			connectpart.onDidChange(e?.document);
+		}
 	});
 
 	vscode.workspace.onDidCreateFiles((e)=>{
 		e.files.map((file)=>{
 			let name = file.path.replace("/","").split('.')[0];
 			let extension = file.path.replace("/","").split('.')[1];
-			if(file.scheme == 'graylog' && extension == 'grule'){
+			if(file.scheme === 'graylog' && extension === 'grule'){
 				connectpart.createRule(name);
 			}
 		});
@@ -91,18 +88,5 @@ export function activate(context: vscode.ExtensionContext) {
 
 }
 
-async function prepareForWork(connectpart:ConnectionPart,secretStorage:vscode.SecretStorage){
-
-	if(vscode.workspace.workspaceFolders &&  vscode.workspace.workspaceFolders.length >0 && vscode.workspace.workspaceFolders[0].uri.toString().includes("graylog"))
-	{
-		await connectpart.initSettings();
-	 	connectpart.prepareForwork();
-	}
-
-	// if(await secretStorage.get("reloaded") == "yes"){
-	// 	connectpart.LoginInitialize();
-	// }
-	
-}
 
 

@@ -1,11 +1,10 @@
 import * as vscode from 'vscode';
-import { GraylogFileSystemProvider } from './fileSystemProvider';
-import axios from 'axios';
+import { GraylogFileSystemProvider, MyTreeItem } from './fileSystemProvider';
 import { DecorationInstanceRenderOptions } from 'vscode';
 import { replaceLinebreaks, truncateString,getPathSeparator } from './utils';
 import { newFileSource, errorForeground, errorMessageBackground, errorBackgroundLight, errorForegroundLight, icon} from './constants';
 import {RuleField, sourceError, apiInstance} from './interfaces';
-
+import { API } from './api';
 
 
 export class ConnectionPart{
@@ -15,7 +14,6 @@ export class ConnectionPart{
 
     public accountPassword = "token";
     public workingDirectory="";
-    public indexString: string | undefined ="";
     indexes:number[]=[];
     public grules:RuleField[][] =[];
     public errors:sourceError[]=[];
@@ -23,14 +21,15 @@ export class ConnectionPart{
 
     public apiSettingInfo:string = "";
     
+    api:API;
     pathSeparator=getPathSeparator();
+    
     constructor(private graylogFilesystem: GraylogFileSystemProvider,private readonly secretStorage:vscode.SecretStorage){
+      this.api = new API();
     }
 
-
+    
     public async createRule(filename:string){
-      let response; 
-
       const firstSlashIndex = filename.indexOf(this.pathSeparator);
       const serverName = filename.substring(0,firstSlashIndex);
       const newRulename = filename.substring(firstSlashIndex+1);
@@ -42,38 +41,21 @@ export class ConnectionPart{
       }
 
       let title = newRulename;
-      try{
-        response = await axios.post(
-          `${this.apis['apiInfoList'][rootIndex].apiHostUrl}/api/system/pipelines/rule`
-          ,{
-            title: title,
-            source:newFileSource(title),
-            description: title
-          },
-          {
-            headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json',
-              'X-Requested-By':this.apis['apiInfoList'][rootIndex].token
-            },
-            auth: {
-              username: this.apis['apiInfoList'][rootIndex].token,
-              password: this.accountPassword
-            }
-          }
-        );
-
-        if(response.status === 200){
-          this.wrilteFile(rootIndex,response.data);
-        }
-      }catch(e){
-        if(e.response?.data){
-          vscode.window.showErrorMessage("Failed to create");
+      try {
+        const data = await this.api.createRule(rootIndex,title);   
+        if(data !== null){
+          this.wrilteFile(rootIndex, data);
+        }     
+      } catch (error) {
+          vscode.window.showErrorMessage(error);
           this.graylogFilesystem.delete(vscode.Uri.parse(`graylog:/${filename}.grule`));     
-        }
+          return;
       }
     }
+    
     public async onDidChange(document:vscode.TextDocument){
+      await this.chekcInfo();
+
       let lIdx = document.fileName.lastIndexOf(this.pathSeparator);
       let  fileName = document.fileName.substring(lIdx+1);
       if(fileName[0] === this.pathSeparator) {
@@ -82,17 +64,20 @@ export class ConnectionPart{
       let dIdx = fileName.lastIndexOf('.');
       let title= fileName.substring(0,dIdx);
       
-      if(fileName === `graylogSetting.json`){
+      if(fileName === 'graylogSetting.json'){
          let value="";
          try {
           if(value = JSON.parse(document.getText())){
             this.apis = value;
+            this.api.setApiInfo(value);
+
             this.apiSettingInfo = document.getText();
             this.writeSettingApiInfoToStorage(this.apiSettingInfo);
            }
          } catch (error) {}
         return;
       }
+
       const rootFolderName = document.fileName.split(this.pathSeparator)[1];
       let rootIndex = this.apis["apiInfoList"].findIndex((info:any)=>info['name'] === rootFolderName);
       if(rootIndex === -1) {
@@ -116,51 +101,17 @@ export class ConnectionPart{
       
       
       let id = this.grules[gIndex][dindex].id;
-      let rulesource =await this.getRuleSource(rootIndex,id);
+      let rulesource =await this.api.getRuleSource(rootIndex,id);
       rulesource['source']=document.getText();
       delete rulesource['errors'];
 
-      let response; 
 
-      let result:sourceError[] =[];
-      try{
-        response = await axios.put(
-          `${this.apis['apiInfoList'][rootIndex]['apiHostUrl']}/api/system/pipelines/rule/${id}`
-          ,rulesource,
-          {
-            headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json',
-              'X-Requested-By':this.apis['apiInfoList'][gIndex]['token']
-            },
-            auth: {
-              username: this.apis['apiInfoList'][gIndex]['token'],
-              password: this.accountPassword
-            }
-          }
-        );
-      }catch(e){
-        if(e.response?.data){
-        
-          e.response.data.map((edata:any)=>{
-            let tempdata:sourceError ={
-              type: edata['type'],
-              line: edata['line'],
-              reason:edata['reason'],
-              position_in_line: edata['position_in_line']
-            };
-            result.push(tempdata);
-          });          
-        }
-      }
-
-
-      this.errors = result;
+      this.errors = await this.api.getErrorLines(rootIndex,id,rulesource);
 
       let ranges:vscode.Range[]=[];
       let decorationOptions:vscode.DecorationOptions[] = [];
 
-      result.map((oneresult)=>{
+      this.errors.map((oneresult)=>{
         let line = oneresult.line-1;
         let indexOf = oneresult.position_in_line;
         // let position = new vscode.Position(line, indexOf +1 ); 
@@ -191,86 +142,21 @@ export class ConnectionPart{
         }
           
       });
-
-
       vscode.window.activeTextEditor?.setDecorations(icon,decorationOptions); 
     }
 
-    public async getRuleSource(instanceIndex:number,id:string){
-      try{
-        const response = await axios.get(`${this.apis['apiInfoList'][instanceIndex]['apiHostUrl']}/api/system/pipelines/rule/${id}`, {
-          headers: {
-            'Accept': 'application/json'
-          },
-          auth: {
-            username: this.apis['apiInfoList'][instanceIndex]['token'],
-            password: this.accountPassword
-          }
-        });
-
-        return response.data;
-       }catch(e){
-      }
-    }
     public async logInfoCheck(url: string, token:string):Promise<boolean>{
-      // let initapiurl:string = "";
-      // let inittoken:string = "";
-      if(!(await this.testAPI(url))){
+      if(!(await this.api.testAPI(url))){
         return false;
       }      
 
-      if(!await this.testUserInfo(url,token)){
+      if(!await this.api.testUserInfo(url,token)){
         return false;
       }
       return true;
     }
 
-    // public async restoreUserInfo(){
-    //   this.token = await this.secretStorage.get("graylogtoken")??"";
-    //   this.apiUrl = await this.secretStorage.get("graylogurl")??"";
-    // }
-    public  async testAPI(apiPath:string):Promise<boolean>{
-        try{
-            const res  = await axios.get(apiPath);
-            if(res.status === 200){    return true; }
-            else {return false;}
-        }catch(e){
-            return false;
-        }
-    }
-
-    public async testUserInfo(apiPath:string, username:string):Promise<boolean>{
-        try{
-            let path="";
-            if(apiPath.includes("/api")){
-                path = apiPath.substring(0,apiPath.indexOf("/api"));
-            }else{
-             path = apiPath;}
-
-            const res  = await axios.get(`${path}/api/cluster`, {
-                params: {
-                  'pretty': 'true'
-                },
-                headers: {
-                  'Accept': 'application/json'
-                },
-                auth: {
-                  username: username,
-                  password: this.accountPassword
-                }
-              });
-              
-              if(Object.keys(res.data).length > 0)
-              {
-                return true;
-              }  
-
-              return false;
-        }catch(e){
-            return false;
-        }
-    }
-
+    
     public wrilteFile(rootIndex:number,rule:any){
       let paths = rule['title'].split(/[\\/]/);
       let cumulative = "";
@@ -285,20 +171,10 @@ export class ConnectionPart{
     }
     
     public async prepareForwork(){
-      this.indexString = await this.secretStorage.get("indexes");
-
-      if(!this.indexString){ return;}
-      const indexs:number[]=[];
-
-      this.indexString.split(',').forEach(data=>{
-        indexs.push(parseInt(data));
-      });
-
-      this.indexes = indexs;
-      indexs.forEach(async (num)=>{
+      this.indexes.forEach(async (num)=>{
         this.graylogFilesystem.createDirectory(vscode.Uri.parse(`graylog:/${this.apis['apiInfoList'][num]['name']}`));
         if(await this.logInfoCheck(this.apis['apiInfoList'][num]['apiHostUrl'],this.apis['apiInfoList'][num]['token'])){
-          let rules =await this.getAllRules(this.apis['apiInfoList'][num]['apiHostUrl'],this.apis['apiInfoList'][num]['token']);
+          let rules =await this.api.getAllRules(this.apis['apiInfoList'][num]['apiHostUrl'],this.apis['apiInfoList'][num]['token']);
           let tempArray:RuleField[]=[];
           rules.map((rule)=>{
             this.wrilteFile(num,rule);
@@ -310,66 +186,40 @@ export class ConnectionPart{
           });
   
           this.grules.push(tempArray);
+        }else{
+          vscode.window.showErrorMessage("API Info is not correct. Please check again...");
         }
       });
       
       this.graylogFilesystem.refresh();
     }
 
-    public async getAllRules(url:string,token:string):Promise<[]>{
-      try{
-        const response = await axios.get(`${url}/api/system/pipelines/rule`, {
-          headers: {
-            'Accept': 'application/json'
-          },
-          auth: {
-            username: token,
-            password: this.accountPassword
-          }
-        });
-
-        return response.data;
-      }catch(e){
-      }
-      return [];
-    }
+    
 
 
     
     public async clearworkspace(result:{label:any,index:number}[]){
-      this.indexString="";
-      const workSpaceFoldersToAdd:{ uri:vscode.Uri, name:string}[]=[];
-      
+      this.indexes = [];
       result.forEach(element => {
-        if(this.indexString !==undefined && this.indexString !==null){
-          if(this.indexString.length>0){
-            this.indexString+=",";
-          }
-          this.indexString+=element.index;
-          workSpaceFoldersToAdd.push({
-            uri:vscode.Uri.parse(`graylog:/${this.apis['apiInfoList'][element.index]['name']}`),
-            name:this.apis['apiInfoList'][element.index]['name']
-          })
-        }
+        this.indexes.push(element.index);
       });
-      
-      await this.secretStorage.store("indexes",this.indexString); // when vs code reloaded, restore the checked instances from this string
-      await this.secretStorage.store("reloaded","no");
 
-      let removeCount=0;
-      vscode.workspace.workspaceFolders?.map(async (folder, index)=>{
-        if(folder.uri.toString().includes('graylog:/')){
-          removeCount++;
-        }
+      vscode.workspace.saveAll().then(()=>{
+        vscode.commands.executeCommand('workbench.action.closeAllEditors').then(async ()=>{
+          for (const [name] of this.graylogFilesystem.readDirectory(vscode.Uri.parse('graylog:/'))) {
+            this.graylogFilesystem.delete(vscode.Uri.parse(`graylog:/${name}`));
+          }
+          await this.prepareForwork();
+          this.graylogFilesystem.refresh();
+        });
       });
-      vscode.workspace.updateWorkspaceFolders(0, removeCount, ...workSpaceFoldersToAdd);
     }
 
     
     public async refreshWorkspace(){
       this.indexes.forEach(async (indexNum,index)=>{
-        let tempRules = await this.getAllRules(this.apis['apiInfoList'][indexNum]['apiHostUrl'],this.apis['apiInfoList'][indexNum]['token']);
-        tempRules.forEach((tmpRule, tempIndex)=>{
+        let tempRules = await this.apis.getAllRules(this.apis['apiInfoList'][indexNum]['apiHostUrl'],this.apis['apiInfoList'][indexNum]['token']);
+        tempRules.forEach((tmpRule:any, tempIndex:number)=>{
           let fIdx = this.grules[index].findIndex((rule)=> rule['title'] === tmpRule['title']);
           if(fIdx > -1){
             this.updateRule(indexNum,this.grules[index][fIdx],tmpRule);
@@ -401,6 +251,7 @@ export class ConnectionPart{
       }
 
       this.apis = JSON.parse(this.apiSettingInfo);
+      this.api.setApiInfo(this.apis);
     }
 
     public async writeSettingApiInfoToStorage(apiInfo:string){
@@ -420,6 +271,56 @@ export class ConnectionPart{
       const doc =await vscode.workspace.openTextDocument(vscode.Uri.parse(`graylog:/graylogSetting.json`));
       await vscode.window.showTextDocument(doc);
     }
+
+    async chekcInfo(){
+      if(!this.apis['apiInfoList']){
+        await this.readSettingApiInfo();
+      }
+    }
     //#endregion
 
+
+    //#region createContentPacktype:"pipeline_rule",
+                // id
+    async createContentPack(){
+      const items:MyTreeItem[]=this.graylogFilesystem.selected;
+
+      const ids:string[]=[];
+      if(items.length>0){
+        items.forEach((rule)=>{
+            const id =this.getRuleId(rule.pathUri);
+            if(id){
+              ids.push(id);
+            }  
+        });
+      }
+      
+      let rootFolderName = items[0].pathUri.path.split(/[\\|/]/)[1];
+      const rootIndex = this.apis["apiInfoList"].findIndex((info:any)=>info['name'] === rootFolderName);
+      await this.api.createContentPack(rootIndex,ids);
+      // await this.api.createContentPack(rootIndex);
+    }
+
+    getRuleId(uri:vscode.Uri):string | undefined{
+      let title = uri.path.substring(1);;
+      let rootFolderName = uri.path.split(/[\\|/]/)[1];
+      
+      
+      title = title.replace(rootFolderName,"").substring(1).replace(/[\\|/]/,'/').replace(".grule","");
+      const rootIndex = this.apis["apiInfoList"].findIndex((info:any)=>info['name'] === rootFolderName);
+
+      const gIndex = this.indexes.findIndex((iIndex:number)=>{
+        if(this.apis['apiInfoList'][iIndex]['name'] === rootFolderName){
+          return true;
+        }
+      });
+
+      for(const item of this.grules[gIndex]){
+        if(item.title === title){
+          return item.id;
+        }
+      }
+      return undefined;
+    }
+    //#endregion
   }
