@@ -121,6 +121,24 @@ export class API{
         return [];
     }
 
+    async getRuleConstraint(rootIndex:number,id: string){
+      // try{
+        const response = await axios.get(`${this.apis['apiInfoList'][rootIndex].apiHostUrl}/api/plugins/org.graylog.plugins.pipelineprocessor/system/pipelines/rule/${id}`, {
+          headers: {
+            'Accept': 'application/json'
+          },
+          auth: {
+            username: this.apis['apiInfoList'][rootIndex].token,
+            password: this.accountPassword
+          }
+        });
+
+        return response.data;
+      // }catch(e){
+      // }
+      // return [];
+    }
+
     async createRule(rootIndex:number, title: string ):Promise<any>{
         const response = await axios.post(
             `${this.apis['apiInfoList'][rootIndex].apiHostUrl}/api/system/pipelines/rule`
@@ -149,6 +167,7 @@ export class API{
 //,
     async createContentPack(rootIndex:number,items:string[]){
       const apiUrl =`${this.apis['apiInfoList'][rootIndex].apiHostUrl}/api/system/content_packs`;
+ //     this.getRuleConstraint(rootIndex,items[0]);
       const entries:any[] =[];
       items.forEach(item=>entries.push({
         type:"pipeline_rule",
@@ -159,11 +178,54 @@ export class API{
       // try {
         response = await axios.post(
           apiUrl
-          ,{
-            name:"test",
-            description: "This is my test pack",
-            content:entries,
-          },
+          ,
+          {
+            "name": "My Pipeline Rules Content Pack",
+            "description": "This content pack includes pipeline rules",
+            "entities": [
+              {
+                "type": {
+                  "name": "pipeline_rule",
+                  "version": "1"
+                },
+                "title": "My Pipeline Rule",
+                "description": "This rule does something",
+                "source": "rule \"My Pipeline Rule\"\nwhen\n  true\nthen\n  // do something\nend",
+                "v":1
+              },
+              {
+                "type": {
+                  "name": "pipeline_rule",
+                  "version": "1"
+                },
+                "title": "Another Pipeline Rule",
+                "description": "This rule does something else",
+                "source": "rule \"Another Pipeline Rule\"\nwhen\n  true\nthen\n  // do something else\nend",
+                "v":1
+              }
+            ]
+          }
+          ,
+          // {
+          //   "v": 1,
+          //   "rev": 1,
+          //   "name": "Test_NAME",
+          //   "summary": "Test_SUMMARY",
+          //   "description": "Test_DESCRIPTION",
+          //   "vendor": "Test_VENDOR",
+          //   "url": "HTTP://TEST.COM",
+          //   "parameters": [],
+          //   "entities": [
+          //     {
+          //       "v": "1",
+          //       "type": {
+          //         "name": "pipeline_rule",
+          //         "version": "1"
+          //       },
+          //       "id":"6431390a151cab7ea80a3fe2"
+          //     }
+          //   ]
+          // },
           {
             headers: {
               'Accept': 'application/json',
