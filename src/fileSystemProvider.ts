@@ -182,7 +182,21 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 					items.push(toDep(element));
 				}
 			});
-			return items;
+			return items.sort((a:MyTreeItem,b:MyTreeItem)=>{
+				const getFileName = (pUri:vscode.Uri):string=>{
+					const paths=pUri.path.split(/[\\|/]/);
+					return paths[paths.length-1];
+				};
+				const aName= getFileName(a.pathUri);
+				const bName = getFileName(b.pathUri);
+				if(aName.includes('.grule') && !bName.includes('.grule')){
+					return 1;
+				}
+				if(!aName.includes('.grule') && bName.includes('.grule')){
+					return -1;
+				}
+				return aName.localeCompare(bName);
+			});
 		} else {
 			return [];
 		}
@@ -197,7 +211,9 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 	}
 	
 	public refresh(item?: MyTreeItem): void {
-		this._onDidChangeTreeData.fire(item);
+		setTimeout(()=>{
+			this._onDidChangeTreeData.fire(item);          
+        },500);
 	}
 
 	updateCheckBox(selected: MyTreeItem):void{
@@ -294,6 +310,7 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 		parent.mtime = Date.now();
 		parent.size -= 1;
 		this._fireSoon({ type: vscode.FileChangeType.Changed, uri: dirname }, { uri, type: vscode.FileChangeType.Deleted });
+		this.refresh();
 	}
 
 	createDirectory(uri: vscode.Uri): void {
@@ -343,7 +360,7 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 		throw vscode.FileSystemError.FileNotADirectory(uri);
 	}
 
-	private pathExists(uri: vscode.Uri):boolean{
+	public pathExists(uri: vscode.Uri):boolean{
 		try{
 			this._lookupAsDirectory(uri,false);
 			return true;

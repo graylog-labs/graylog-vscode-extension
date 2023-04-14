@@ -88,8 +88,7 @@ export class API{
           }
         );
       }catch(e){
-        if(e.response?.data){
-        
+        if(e.response?.data && Array.isArray(e.response?.data)){
           e.response.data.map((edata:any)=>{
             let tempdata:sourceError ={
               type: edata['type'],
@@ -121,9 +120,10 @@ export class API{
         return [];
     }
 
-    async getRuleConstraint(rootIndex:number,id: string){
-      // try{
-        const response = await axios.get(`${this.apis['apiInfoList'][rootIndex].apiHostUrl}/api/plugins/org.graylog.plugins.pipelineprocessor/system/pipelines/rule/${id}`, {
+    async getFacilityAndServerVersion(rootIndex:number):Promise<{facility:string,version:string} | undefined>{
+
+      try{
+        const response = await axios.get(`${this.apis['apiInfoList'][rootIndex].apiHostUrl}/api/system`, {
           headers: {
             'Accept': 'application/json'
           },
@@ -133,10 +133,31 @@ export class API{
           }
         });
 
+        return {
+          facility:response.data["facility"],
+          version: response.data["version"]
+        };
+      }catch(e){
+      }
+      
+      return undefined;
+
+    }
+    async getRuleConstraint(rootIndex:number,id: string){
+      
+        const response = await axios.post(`${this.apis['apiInfoList'][rootIndex].apiHostUrl}/api/system/content_packs/generate_id`, {},{
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'X-Requested-By':this.apis['apiInfoList'][rootIndex].token
+          },
+          auth: {
+            username: this.apis['apiInfoList'][rootIndex].token,
+            password: "token"
+          }
+        });
+
         return response.data;
-      // }catch(e){
-      // }
-      // return [];
     }
 
     async createRule(rootIndex:number, title: string ):Promise<any>{
@@ -167,12 +188,14 @@ export class API{
 //,
     async createContentPack(rootIndex:number,items:string[]){
       const apiUrl =`${this.apis['apiInfoList'][rootIndex].apiHostUrl}/api/system/content_packs`;
- //     this.getRuleConstraint(rootIndex,items[0]);
-      const entries:any[] =[];
-      items.forEach(item=>entries.push({
-        type:"pipeline_rule",
-        id:item
-      }));
+      const data = await this.getFacilityAndServerVersion(rootIndex);
+    //  this.getRuleConstraint(rootIndex,items[0]);
+     
+    //  const entries:any[] =[];
+    //   items.forEach(item=>entries.push({
+    //     type:"pipeline_rule",
+    //     id:item
+    //   }));
       
       let response="";
       // try {
@@ -180,52 +203,47 @@ export class API{
           apiUrl
           ,
           {
-            "name": "My Pipeline Rules Content Pack",
-            "description": "This content pack includes pipeline rules",
+            "id": "11111-11111-11121",
+            "rev": 1,
+            "v": "1",
+            "name": "passiondragon",
+            "summary": "dsafd",
+            "description": "dsafd",
+            "vendor": "pdragon0512@gmail.com",
+            "url": "https://www.youtube.com/watch?v=HSUKNHVda_I",
+            "server_version": data?.version,
+            "parameters": [],
             "entities": [
               {
-                "type": {
-                  "name": "pipeline_rule",
-                  "version": "1"
-                },
-                "title": "My Pipeline Rule",
-                "description": "This rule does something",
-                "source": "rule \"My Pipeline Rule\"\nwhen\n  true\nthen\n  // do something\nend",
-                "v":1
-              },
-              {
-                "type": {
-                  "name": "pipeline_rule",
-                  "version": "1"
-                },
-                "title": "Another Pipeline Rule",
-                "description": "This rule does something else",
-                "source": "rule \"Another Pipeline Rule\"\nwhen\n  true\nthen\n  // do something else\nend",
-                "v":1
+                  "type": {
+                      "name": "pipeline_rule",
+                      "version": "1"
+                  },
+                  "v": "1",
+                  "data": {
+                      "title": {
+                          "@type": "string",
+                          "@value": "a1"
+                      },
+                      "description": {
+                          "@type": "string",
+                          "@value": "a1"
+                      },
+                      "source": {
+                          "@type": "string",
+                          "@value": "rule \"a1\"\n    when\n    // Set the conditions of your rule\n    true\nthen\n    // Develop the activities to take place within your rule\n    // The Function documentation is here: \n    // https://go2docs.graylog.org/5-0/making_sense_of_your_log_data/functions_index.html\n\n    // The Graylog Information Model (How to name your fields) is here:\n    // https://schema.graylog.org\n\n    // Thanks for using the Graylog VSCode Editor - Graylog Services Team\n    \nend"
+                      }
+                  },
+                  "constraints": [
+                      {
+                          "type": "server-version",
+                          "version": ">=" + data?.version
+                      }
+                  ]
               }
-            ]
+          ]
           }
           ,
-          // {
-          //   "v": 1,
-          //   "rev": 1,
-          //   "name": "Test_NAME",
-          //   "summary": "Test_SUMMARY",
-          //   "description": "Test_DESCRIPTION",
-          //   "vendor": "Test_VENDOR",
-          //   "url": "HTTP://TEST.COM",
-          //   "parameters": [],
-          //   "entities": [
-          //     {
-          //       "v": "1",
-          //       "type": {
-          //         "name": "pipeline_rule",
-          //         "version": "1"
-          //       },
-          //       "id":"6431390a151cab7ea80a3fe2"
-          //     }
-          //   ]
-          // },
           {
             headers: {
               'Accept': 'application/json',
@@ -242,23 +260,5 @@ export class API{
         
       // }
       
-      // if(response.status === 200){
-      //   return response.data;
-      // }
-
-//'http://localhost:9000/api/system/content_packs'
-      // response =await axios.post(url,{title:'title'},
-      // {
-      //   headers:{
-      //       Accept: 'application/json',
-      //       'Content-Type': 'application/json',
-      //       'X-Requested-By':this.apis['apiInfoList'][rootIndex].token
-      //   },
-      //   auth: {
-      //       username: this.apis['apiInfoList'][rootIndex].token,
-      //       password: this.accountPassword
-      //     }
-      // });
-      // console.log(response);
     }
 }

@@ -164,7 +164,21 @@ class GraylogFileSystemProvider {
                     items.push(toDep(element));
                 }
             });
-            return items;
+            return items.sort((a, b) => {
+                const getFileName = (pUri) => {
+                    const paths = pUri.path.split(/[\\|/]/);
+                    return paths[paths.length - 1];
+                };
+                const aName = getFileName(a.pathUri);
+                const bName = getFileName(b.pathUri);
+                if (aName.includes('.grule') && !bName.includes('.grule')) {
+                    return 1;
+                }
+                if (!aName.includes('.grule') && bName.includes('.grule')) {
+                    return -1;
+                }
+                return aName.localeCompare(bName);
+            });
         }
         else {
             return [];
@@ -177,7 +191,9 @@ class GraylogFileSystemProvider {
         throw new Error('Method not implemented.');
     }
     refresh(item) {
-        this._onDidChangeTreeData.fire(item);
+        setTimeout(() => {
+            this._onDidChangeTreeData.fire(item);
+        }, 500);
     }
     updateCheckBox(selected) {
         selected.checked = !selected.checked;
@@ -251,6 +267,7 @@ class GraylogFileSystemProvider {
         parent.mtime = Date.now();
         parent.size -= 1;
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri: dirname }, { uri, type: vscode.FileChangeType.Deleted });
+        this.refresh();
     }
     createDirectory(uri) {
         const basename = path.posix.basename(uri.path);

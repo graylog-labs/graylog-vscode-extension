@@ -56,11 +56,16 @@ export class ConnectionPart{
     public async onDidChange(document:vscode.TextDocument){
       await this.chekcInfo();
 
-      let lIdx = document.fileName.lastIndexOf(this.pathSeparator);
-      let  fileName = document.fileName.substring(lIdx+1);
+//      let lIdx = document.fileName.lastIndexOf(this.pathSeparator);
+      let  fileName = document.fileName;
+      
       if(fileName[0] === this.pathSeparator) {
         fileName = fileName.substring(1);
       }
+      const iIndex = fileName.indexOf(this.pathSeparator);
+
+      fileName=fileName.substring(iIndex+1);
+      
       let dIdx = fileName.lastIndexOf('.');
       let title= fileName.substring(0,dIdx);
       
@@ -156,14 +161,16 @@ export class ConnectionPart{
       return true;
     }
 
-    
     public wrilteFile(rootIndex:number,rule:any){
       let paths = rule['title'].split(/[\\/]/);
       let cumulative = "";
       let name = this.apis['apiInfoList'][rootIndex]['name'];
       if(paths.length > 1){
         for(let i=0;i<paths.length -1 ; i++){
-          this.graylogFilesystem.createDirectory(vscode.Uri.parse(`graylog:/${name}/${cumulative}${paths[i]}`));
+          if(!this.graylogFilesystem.pathExists(vscode.Uri.parse(`graylog:/${name}/${cumulative}${paths[i]}`))){
+            this.graylogFilesystem.createDirectory(vscode.Uri.parse(`graylog:/${name}/${cumulative}${paths[i]}`));
+          }
+
           cumulative +=(paths[i] + "/");
         }
       }
@@ -216,19 +223,35 @@ export class ConnectionPart{
     }
 
     
-    public async refreshWorkspace(){
-      this.indexes.forEach(async (indexNum,index)=>{
-        let tempRules = await this.apis.getAllRules(this.apis['apiInfoList'][indexNum]['apiHostUrl'],this.apis['apiInfoList'][indexNum]['token']);
-        tempRules.forEach((tmpRule:any, tempIndex:number)=>{
-          let fIdx = this.grules[index].findIndex((rule)=> rule['title'] === tmpRule['title']);
-          if(fIdx > -1){
-            this.updateRule(indexNum,this.grules[index][fIdx],tmpRule);
-          }else{
-            this.wrilteFile(indexNum,tmpRule);
+    public refreshWorkspace(){
+      vscode.workspace.saveAll().then(async ()=>{
+        for(let index=0;index<this.indexes.length;index++){
+          const indexNum = this.indexes[index];
+          let tempRules = await this.api.getAllRules(this.apis['apiInfoList'][indexNum]['apiHostUrl'],this.apis['apiInfoList'][indexNum]['token']);
+          for(const tmpRule of tempRules){
+            let fIdx = this.grules[index].findIndex((rule)=> rule['title'] === tmpRule['title']);
+            if(fIdx > -1){
+              this.updateRule(indexNum,this.grules[index][fIdx],tmpRule);
+            }else{
+              this.grules[index].push(tmpRule);
+              this.wrilteFile(indexNum,tmpRule);
+            }
           }
-        });  
-      });
   
+          const updatedgRules:RuleField[]=[];
+          for(const tmpgRule of this.grules[index]){
+            let fIdx = tempRules.findIndex((tmprule)=> tmpgRule['title'] === tmprule['title']);
+            if(fIdx === -1){
+              this.graylogFilesystem.delete(vscode.Uri.parse(`graylog:/${this.apis['apiInfoList'][indexNum]['name']}/${tmpgRule['title']}.grule`));
+            }else {
+              updatedgRules.push(tmpgRule);
+            }
+          }
+          this.grules[index] = updatedgRules;
+        }
+  
+        this.graylogFilesystem.refresh();
+      });  
     }
 
     public readRule(rootIndex:number,filePath: string){
