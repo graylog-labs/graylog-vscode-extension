@@ -36,6 +36,10 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('graylog.saveToLocal', (item:MyTreeItem) => {
 		connectpart.saveToLocalFolder(item);
 	}));
+
+	context.subscriptions.push(vscode.commands.registerCommand('graylog.createNewRule', (item:MyTreeItem) => {
+		connectpart.createNewRule(item);
+	}));
 	
 	context.subscriptions.push(vscode.commands.registerCommand('graylog.selectInstances',async ()=>{
 		await connectpart.initSettings();

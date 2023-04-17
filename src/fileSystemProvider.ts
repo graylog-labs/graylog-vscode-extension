@@ -6,7 +6,7 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { TreeViewModes } from './interfaces';
+import { TreeViewModes,createEditStatus } from './interfaces';
 export class File implements vscode.FileStat {
 
 	type: vscode.FileType;
@@ -71,7 +71,9 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 	readonly onDidChangeTreeData: vscode.Event<void | MyTreeItem | MyTreeItem[] | null | undefined> = this._onDidChangeTreeData.event;
 	
 	workspaceRoot: vscode.Uri= vscode.Uri.parse('graylog:/');
-	
+    createEditStatus:createEditStatus = createEditStatus.normal;
+	createEditItem?:MyTreeItem;
+
 	selected: MyTreeItem[]=[];
 	hasChildren(item:MyTreeItem):boolean{
 		if(item.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed || item.collapsibleState === vscode.TreeItemCollapsibleState.Expanded){
@@ -102,9 +104,12 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 	}
 	
 	getTreeItem(element: MyTreeItem): vscode.TreeItem | Thenable<vscode.TreeItem> {
+
 		if(element.collapsibleState === TreeItemCollapsibleState.Collapsed || element.collapsibleState === TreeItemCollapsibleState.Expanded){
 			if(this.getChildDepth(element.pathUri) === 1){
 				element.contextValue = "serverInstance";
+			}else{
+				element.contextValue = "folder";
 			}
 
 			return element;
@@ -215,6 +220,8 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 			this._onDidChangeTreeData.fire(item);          
         },500);
 	}
+
+	
 
 	updateCheckBox(selected: MyTreeItem):void{
 		selected.checked = !selected.checked;

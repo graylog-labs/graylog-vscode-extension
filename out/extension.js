@@ -25,6 +25,9 @@ function activate(context) {
     context.subscriptions.push(vscode.commands.registerCommand('graylog.saveToLocal', (item) => {
         connectpart.saveToLocalFolder(item);
     }));
+    context.subscriptions.push(vscode.commands.registerCommand('graylog.createNewRule', (item) => {
+        //connectpart.saveToLocalFolder(item);
+    }));
     context.subscriptions.push(vscode.commands.registerCommand('graylog.selectInstances', async () => {
         await connectpart.initSettings();
         const items = [];

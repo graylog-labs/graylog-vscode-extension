@@ -24,6 +24,7 @@ export class ConnectionPart{
     api:API;
     pathSeparator=getPathSeparator();
     
+    // createEditItem:MyTreeItem = null;
     constructor(private graylogFilesystem: GraylogFileSystemProvider,private readonly secretStorage:vscode.SecretStorage){
       this.api = new API();
     }
@@ -360,7 +361,7 @@ export class ConnectionPart{
         this.saveFilrOrFolder(item,uri[0]);
       }
     }
-
+    
     async saveFilrOrFolder(item:MyTreeItem, fileUri:vscode.Uri){
       if(this.graylogFilesystem.hasChildren(item)){
         vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(fileUri,...this.getFileOrFolderPath(item.pathUri)));
@@ -380,6 +381,11 @@ export class ConnectionPart{
       }
       const paths = fpath.split(/[\\|/]/); 
       return paths;
+    }
+
+
+    async createNewRule(item:MyTreeItem){
+      
     }
     //#endregion
   }

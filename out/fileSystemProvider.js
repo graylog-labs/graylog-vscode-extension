@@ -49,6 +49,7 @@ class GraylogFileSystemProvider {
         this._onDidChangeTreeData = new vscode.EventEmitter();
         this.onDidChangeTreeData = this._onDidChangeTreeData.event;
         this.workspaceRoot = vscode.Uri.parse('graylog:/');
+        this.createEditStatus = interfaces_1.createEditStatus.normal;
         this.selected = [];
         //////////////////////////////////
         ////file system
@@ -88,6 +89,9 @@ class GraylogFileSystemProvider {
         if (element.collapsibleState === vscode_1.TreeItemCollapsibleState.Collapsed || element.collapsibleState === vscode_1.TreeItemCollapsibleState.Expanded) {
             if (this.getChildDepth(element.pathUri) === 1) {
                 element.contextValue = "serverInstance";
+            }
+            else {
+                element.contextValue = "folder";
             }
             return element;
         }

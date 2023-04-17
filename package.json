@@ -84,6 +84,11 @@
         "command": "graylog.saveToLocal",
         "title":"Save To Local Folder",
         "category": "Graylog"
+      },
+      {
+        "command": "graylog.createNewRule",
+        "title":"New Pipleline Rule",
+        "category": "Graylog"
       }
     ],
     "menus":{
@@ -117,6 +122,10 @@
         {
           "command": "graylog.saveToLocal",
           "when": "view == graylog && viewItem == serverInstance"
+        },
+        {
+          "command": "graylog.createNewRule",
+          "when": "view == graylog && (viewItem == serverInstance || viewItem == folder)"
         }
       ]
     },
