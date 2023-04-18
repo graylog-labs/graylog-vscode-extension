@@ -2,6 +2,8 @@ import axios from 'axios';
 import { newFileSource } from './constants';
 import { sourceError } from './interfaces';
 import { MyTreeItem } from './fileSystemProvider';
+import { getFormatedHashValue } from './utils';
+import * as moment from 'moment';
 export class API{
 
     accountPassword = "token";
@@ -102,6 +104,8 @@ export class API{
       }
       return result;
     }
+
+    
     public async getAllRules(url:string,token:string):Promise<[]>{
         try{
           const response = await axios.get(`${url}/api/system/pipelines/rule`, {
@@ -186,62 +190,65 @@ export class API{
         return null;
     }
 //,
+
+
     async createContentPack(rootIndex:number,items:string[]){
       const apiUrl =`${this.apis['apiInfoList'][rootIndex].apiHostUrl}/api/system/content_packs`;
       const data = await this.getFacilityAndServerVersion(rootIndex);
-    //  this.getRuleConstraint(rootIndex,items[0]);
-     
-    //  const entries:any[] =[];
-    //   items.forEach(item=>entries.push({
-    //     type:"pipeline_rule",
-    //     id:item
-    //   }));
+      let hashString = `${this.apis['apiInfoList'][rootIndex].apiHostUrl} count=${items.length} `;
+      hashString += items.join("");
       
+      const entities =[];
+      for(const item of items){
+        const source=await this.getRuleSource(rootIndex,item);
+        entities.push({
+          "type": {
+              "name": "pipeline_rule",
+              "version": "1"
+          },
+          "v":"1",
+          "id": getFormatedHashValue(`pipeline_rule;${this.apis['apiInfoList'][rootIndex].apiHostUrl};${Date.now.toString()};${source.source}`),
+          "data": {
+              "title": {
+                  "@type": "string",
+                  "@value": source.title
+              },
+              "description": {
+                  "@type": "string",
+                  "@value": source.description
+              },
+              "source": {
+                  "@type": "string",
+                  "@value": source.source
+              }
+          },
+          "constraints": [
+              {
+                  "type": "server-version",
+                  "version": ">=" + data?.version
+              }
+          ]
+        });
+      }
+
+      const contentPackName = `Graylog Rules Manager Export - ${moment().format("YYYY-MM-DD HH:mm:ss")}`;
       let response="";
-      // try {
+      try {
         response = await axios.post(
           apiUrl
           ,
           {
-            "id": "11111-11111-11121",
+            "id": getFormatedHashValue(`content_pack;${this.apis['apiInfoList'][rootIndex].apiHostUrl};${moment().format("YYYY-MM-DD HH:mm:ss")};${this.apis['apiInfoList'][rootIndex].token}`),
             "rev": 1,
             "v": "1",
-            "name": "passiondragon",
-            "summary": "dsafd",
-            "description": "dsafd",
-            "vendor": "pdragon0512@gmail.com",
-            "url": "https://www.youtube.com/watch?v=HSUKNHVda_I",
+            "name": contentPackName,
+            "summary": "Graylog Rules Content Pack",
+            "description": "Content Pack of Graylog Rules",
+            "vendor": "Graylog Rules Manager",
+            "url": "https://www.graylog.org/post/introducing-graylog-labs/",
             "server_version": data?.version,
             "parameters": [],
-            "entities": [
-              {
-                  "type": {
-                      "name": "pipeline_rule",
-                      "version": "1"
-                  },
-                  "v": "1",
-                  "data": {
-                      "title": {
-                          "@type": "string",
-                          "@value": "a1"
-                      },
-                      "description": {
-                          "@type": "string",
-                          "@value": "a1"
-                      },
-                      "source": {
-                          "@type": "string",
-                          "@value": "rule \"a1\"\n    when\n    // Set the conditions of your rule\n    true\nthen\n    // Develop the activities to take place within your rule\n    // The Function documentation is here: \n    // https://go2docs.graylog.org/5-0/making_sense_of_your_log_data/functions_index.html\n\n    // The Graylog Information Model (How to name your fields) is here:\n    // https://schema.graylog.org\n\n    // Thanks for using the Graylog VSCode Editor - Graylog Services Team\n    \nend"
-                      }
-                  },
-                  "constraints": [
-                      {
-                          "type": "server-version",
-                          "version": ">=" + data?.version
-                      }
-                  ]
-              }
-          ]
+            entities
           }
           ,
           {
@@ -256,9 +263,9 @@ export class API{
             }
           }
         );
-      // } catch (error) {
+      } catch (error) {
         
-      // }
+      }
       
     }
 }

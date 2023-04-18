@@ -1,8 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getPathSeparator = exports.addColorSettings = exports.basename = exports.svgToUri = exports.replaceLinebreaks = exports.truncateString = void 0;
+exports.getFormatedHashValue = exports.getPathSeparator = exports.addColorSettings = exports.basename = exports.svgToUri = exports.replaceLinebreaks = exports.truncateString = void 0;
 const vscode = require("vscode");
 const path = require('path');
+const ts_md5_1 = require("ts-md5");
 /**
  * Cut off string if it's longer than provided number of characters.
  */
@@ -43,4 +44,13 @@ function getPathSeparator() {
     return path.sep;
 }
 exports.getPathSeparator = getPathSeparator;
+function getFormatedHashValue(inputString) {
+    const hashresult = ts_md5_1.Md5.hashStr(inputString);
+    let tempResult = hashresult.split("");
+    [23, 18, 13, 8].forEach((index) => {
+        tempResult.splice(index, 0, "-");
+    });
+    return tempResult.join("");
+}
+exports.getFormatedHashValue = getFormatedHashValue;
 //# sourceMappingURL=utils.js.map

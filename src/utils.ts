@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 const path = require('path');
+import {Md5} from 'ts-md5';
 /**
  * Cut off string if it's longer than provided number of characters.
  */
@@ -40,4 +41,15 @@ export function addColorSettings(colorData:any) {
 
 export function getPathSeparator():string{
 	return path.sep;
+}
+
+export function getFormatedHashValue(inputString:string){
+	const hashresult = Md5.hashStr(inputString);
+	let tempResult = hashresult.split("");
+
+	[23,18,13,8].forEach((index)=>{
+		tempResult.splice(index,0,"-");
+	});
+
+	return tempResult.join("");
 }
