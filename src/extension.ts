@@ -18,12 +18,16 @@ export function activate(context: vscode.ExtensionContext) {
 	const connectpart = new ConnectionPart(graylog,context.secrets);
 
 	context.subscriptions.push(vscode.workspace.registerFileSystemProvider('graylog', graylog, { isCaseSensitive: true }));
-	const treeview = vscode.window.createTreeView('graylog',{ treeDataProvider:graylog });
-	
+	const treeview = vscode.window.createTreeView('graylog',{ treeDataProvider:graylog });	
+
 	context.subscriptions.push(vscode.commands.registerCommand('graylog.RereshWorkSpace', async () => {
 		connectpart.refreshWorkspace();
 	}));
 	
+	context.subscriptions.push(vscode.commands.registerCommand('graylog.showCreateInputBox', async () => {
+		console.log('---------------');
+	}));
+
 	context.subscriptions.push(vscode.commands.registerCommand('graylog.treeItemClick',(item:MyTreeItem)=>{
 		graylog.onClickItem(item);
 	}));
@@ -33,8 +37,16 @@ export function activate(context: vscode.ExtensionContext) {
 		connectpart.openSettings();
 	}));
 
-	context.subscriptions.push(vscode.commands.registerCommand('graylog.saveToLocal', (item:MyTreeItem) => {
+	context.subscriptions.push(vscode.commands.registerCommand( 'graylog.saveToLocal', (item:MyTreeItem) => {
 		connectpart.saveToLocalFolder(item);
+	}));
+
+	context.subscriptions.push(vscode.commands.registerCommand( 'graylog.createNewRule', async (item:MyTreeItem) => {
+		const value = await vscode.window.showInputBox({ prompt: 'Enter a value' });
+		if(value) {
+			connectpart.createNewRule( item, value);
+		}
+		// connectpart.createNewRule(item);
 	}));
 	
 	context.subscriptions.push(vscode.commands.registerCommand('graylog.selectInstances',async ()=>{

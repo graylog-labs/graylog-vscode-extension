@@ -23,3 +23,9 @@ export enum TreeViewModes{
     normalMode =1,
     selectMode =2
 }
+
+export enum createEditStatus{
+    create = 1,
+    edit = 2,
+    normal = 3
+}

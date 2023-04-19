@@ -30,6 +30,11 @@
           "name": "Graylog",
           "icon": "media/logo.svg",
           "contextualTitle": "Graylog Explorer"
+        },
+        {
+          "id":"myWebView",
+          "name":"My Web View",
+          "webview":true
         }
       ]
     },
@@ -39,9 +44,9 @@
         "title": "Refresh rules from server",
         "category": "Graylog",
         "icon": {
-					"light": "resources/light/refresh.svg",
-					"dark": "resources/dark/refresh.svg"
-				}
+          "light": "resources/light/refresh.svg",
+          "dark": "resources/dark/refresh.svg"
+        }
       },
       {
         "command": "graylog.MultiSelect",
@@ -49,17 +54,17 @@
         "category": "Graylog",
         "icon": {
           "light": "resources/checkbox-check.svg",
-					"dark": "resources/checkbox-check.svg"
-				}
+          "dark": "resources/checkbox-check.svg"
+        }
       },
       {
         "command": "graylog.settingApiInfo",
         "title": "Setting of API",
         "category": "Graylog",
         "icon": {
-					"light": "resources/setting.svg",
-					"dark": "resources/setting.svg"
-				}
+          "light": "resources/setting.svg",
+          "dark": "resources/setting.svg"
+        }
       },
       {
         "command": "graylog.selectInstances",
@@ -67,47 +72,52 @@
         "category": "Graylog",
         "icon": {
           "light": "resources/multiselect-enable.svg",
-					"dark": "resources/multiselect-enable.svg"
-				}
+          "dark": "resources/multiselect-enable.svg"
+        }
       },
       {
         "command": "graylog.exportToContext",
-        "title":"Export To Content Pack",
+        "title": "Export To Content Pack",
         "category": "Graylog"
       },
       {
         "command": "graylog.treeItemClick",
-        "title":"Event for selected TreeItem",
+        "title": "Event for selected TreeItem",
         "category": "Graylog"
       },
       {
         "command": "graylog.saveToLocal",
-        "title":"Save To Local Folder",
+        "title": "Save To Local Folder",
+        "category": "Graylog"
+      },
+      {
+        "command": "graylog.createNewRule",
+        "title": "New Pipleline Rule",
         "category": "Graylog"
       }
     ],
-    "menus":{
+    "menus": {
       "view/title": [
         {
-					"command": "graylog.RereshWorkSpace",
+          "command": "graylog.RereshWorkSpace",
           "group": "navigation",
-					"when": "view == graylog"
-				},
+          "when": "view == graylog"
+        },
         {
-					"command": "graylog.MultiSelect",
+          "command": "graylog.MultiSelect",
           "group": "navigation",
-					"when": "view == graylog"
-				},
+          "when": "view == graylog"
+        },
         {
-					"command": "graylog.settingApiInfo",
+          "command": "graylog.settingApiInfo",
           "group": "navigation",
-					"when": "view == graylog"
-				},
+          "when": "view == graylog"
+        },
         {
-					"command": "graylog.selectInstances",
+          "command": "graylog.selectInstances",
           "group": "navigation",
-					"when": "view == graylog"
-				}
+          "when": "view == graylog"
+        }
       ],
       "view/item/context": [
         {
@@ -117,6 +127,10 @@
         {
           "command": "graylog.saveToLocal",
           "when": "view == graylog && viewItem == serverInstance"
+        },
+        {
+          "command": "graylog.createNewRule",
+          "when": "view == graylog && (viewItem == serverInstance || viewItem == folder)"
         }
       ]
     },
@@ -263,8 +277,10 @@
   "dependencies": {
     "axios": "^1.3.4",
     "mkdirp": "^2.1.5",
+    "moment": "^2.29.4",
     "path": "^0.12.7",
-    "rimraf": "^4.4.0"
+    "rimraf": "^4.4.0",
+    "ts-md5": "^1.3.1"
   },
   "repository": {
     "type": "git",

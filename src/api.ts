@@ -2,6 +2,8 @@ import axios from 'axios';
 import { newFileSource } from './constants';
 import { sourceError } from './interfaces';
 import { MyTreeItem } from './fileSystemProvider';
+import { getFormatedHashValue } from './utils';
+import * as moment from 'moment';
 export class API{
 
     accountPassword = "token";
@@ -88,8 +90,7 @@ export class API{
           }
         );
       }catch(e){
-        if(e.response?.data){
-        
+        if(e.response?.data && Array.isArray(e.response?.data)){
           e.response.data.map((edata:any)=>{
             let tempdata:sourceError ={
               type: edata['type'],
@@ -103,6 +104,8 @@ export class API{
       }
       return result;
     }
+
+    
     public async getAllRules(url:string,token:string):Promise<[]>{
         try{
           const response = await axios.get(`${url}/api/system/pipelines/rule`, {
@@ -119,6 +122,46 @@ export class API{
         }catch(e){
         }
         return [];
+    }
+
+    async getFacilityAndServerVersion(rootIndex:number):Promise<{facility:string,version:string} | undefined>{
+
+      try{
+        const response = await axios.get(`${this.apis['apiInfoList'][rootIndex].apiHostUrl}/api/system`, {
+          headers: {
+            'Accept': 'application/json'
+          },
+          auth: {
+            username: this.apis['apiInfoList'][rootIndex].token,
+            password: this.accountPassword
+          }
+        });
+
+        return {
+          facility:response.data["facility"],
+          version: response.data["version"]
+        };
+      }catch(e){
+      }
+      
+      return undefined;
+
+    }
+    async getRuleConstraint(rootIndex:number,id: string){
+      
+        const response = await axios.post(`${this.apis['apiInfoList'][rootIndex].apiHostUrl}/api/system/content_packs/generate_id`, {},{
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'X-Requested-By':this.apis['apiInfoList'][rootIndex].token
+          },
+          auth: {
+            username: this.apis['apiInfoList'][rootIndex].token,
+            password: "token"
+          }
+        });
+
+        return response.data;
     }
 
     async createRule(rootIndex:number, title: string ):Promise<any>{
@@ -147,23 +190,67 @@ export class API{
         return null;
     }
 //,
+
+
     async createContentPack(rootIndex:number,items:string[]){
       const apiUrl =`${this.apis['apiInfoList'][rootIndex].apiHostUrl}/api/system/content_packs`;
-      const entries:any[] =[];
-      items.forEach(item=>entries.push({
-        type:"pipeline_rule",
-        id:item
-      }));
+      const data = await this.getFacilityAndServerVersion(rootIndex);
+      let hashString = `${this.apis['apiInfoList'][rootIndex].apiHostUrl} count=${items.length} `;
+      hashString += items.join("");
       
+      const entities =[];
+      for(const item of items){
+        const source=await this.getRuleSource(rootIndex,item);
+        entities.push({
+          "type": {
+              "name": "pipeline_rule",
+              "version": "1"
+          },
+          "v":"1",
+          "id": getFormatedHashValue(`pipeline_rule;${this.apis['apiInfoList'][rootIndex].apiHostUrl};${Date.now.toString()};${source.source}`),
+          "data": {
+              "title": {
+                  "@type": "string",
+                  "@value": source.title
+              },
+              "description": {
+                  "@type": "string",
+                  "@value": source.description
+              },
+              "source": {
+                  "@type": "string",
+                  "@value": source.source
+              }
+          },
+          "constraints": [
+              {
+                  "type": "server-version",
+                  "version": ">=" + data?.version
+              }
+          ]
+        });
+      }
+
+      const contentPackName = `Graylog Rules Manager Export - ${moment().format("YYYY-MM-DD HH:mm:ss")}`;
       let response="";
-      // try {
+      try {
         response = await axios.post(
           apiUrl
-          ,{
-            name:"test",
-            description: "This is my test pack",
-            content:entries,
-          },
+          ,
+          {
+            "id": getFormatedHashValue(`content_pack;${this.apis['apiInfoList'][rootIndex].apiHostUrl};${moment().format("YYYY-MM-DD HH:mm:ss")};${this.apis['apiInfoList'][rootIndex].token}`),
+            "rev": 1,
+            "v": "1",
+            "name": contentPackName,
+            "summary": "Graylog Rules Content Pack",
+            "description": "Content Pack of Graylog Rules",
+            "vendor": "Graylog Rules Manager",
+            "url": "https://www.graylog.org/post/introducing-graylog-labs/",
+            "server_version": data?.version,
+            "parameters": [],
+            entities
+          }
+          ,
           {
             headers: {
               'Accept': 'application/json',
@@ -176,27 +263,9 @@ export class API{
             }
           }
         );
-      // } catch (error) {
+      } catch (error) {
         
-      // }
+      }
       
-      // if(response.status === 200){
-      //   return response.data;
-      // }
-
-//'http://localhost:9000/api/system/content_packs'
-      // response =await axios.post(url,{title:'title'},
-      // {
-      //   headers:{
-      //       Accept: 'application/json',
-      //       'Content-Type': 'application/json',
-      //       'X-Requested-By':this.apis['apiInfoList'][rootIndex].token
-      //   },
-      //   auth: {
-      //       username: this.apis['apiInfoList'][rootIndex].token,
-      //       password: this.accountPassword
-      //     }
-      // });
-      // console.log(response);
     }
 }
