@@ -15,6 +15,9 @@ function activate(context) {
     context.subscriptions.push(vscode.commands.registerCommand('graylog.RereshWorkSpace', async () => {
         connectpart.refreshWorkspace();
     }));
+    context.subscriptions.push(vscode.commands.registerCommand('graylog.showCreateInputBox', async () => {
+        console.log('---------------');
+    }));
     context.subscriptions.push(vscode.commands.registerCommand('graylog.treeItemClick', (item) => {
         graylog.onClickItem(item);
     }));
@@ -25,8 +28,12 @@ function activate(context) {
     context.subscriptions.push(vscode.commands.registerCommand('graylog.saveToLocal', (item) => {
         connectpart.saveToLocalFolder(item);
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('graylog.createNewRule', (item) => {
-        connectpart.createNewRule(item);
+    context.subscriptions.push(vscode.commands.registerCommand('graylog.createNewRule', async (item) => {
+        const value = await vscode.window.showInputBox({ prompt: 'Enter a value' });
+        if (value) {
+            connectpart.createNewRule(item, value);
+        }
+        // connectpart.createNewRule(item);
     }));
     context.subscriptions.push(vscode.commands.registerCommand('graylog.selectInstances', async () => {
         await connectpart.initSettings();

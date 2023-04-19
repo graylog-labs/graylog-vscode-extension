@@ -384,8 +384,11 @@ export class ConnectionPart{
     }
 
 
-    async createNewRule(item:MyTreeItem){
-      
+    async createNewRule(item: MyTreeItem, value :string){
+      let rootFolderName = item.pathUri.path.split(/[\\|/]/)[1];
+      const rootIndex = this.apis["apiInfoList"].findIndex((info:any)=>info['name'] === rootFolderName);
+      this.api.createRule(rootIndex,value);
+      vscode.commands.executeCommand("graylog.RereshWorkSpace");
     }
     //#endregion
   }

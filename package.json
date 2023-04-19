@@ -30,6 +30,11 @@
           "name": "Graylog",
           "icon": "media/logo.svg",
           "contextualTitle": "Graylog Explorer"
+        },
+        {
+          "id":"myWebView",
+          "name":"My Web View",
+          "webview":true
         }
       ]
     },

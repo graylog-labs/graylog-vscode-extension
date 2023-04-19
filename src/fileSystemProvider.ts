@@ -6,6 +6,7 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { TreeItemLabel } from 'vscode';
 import { TreeViewModes,createEditStatus } from './interfaces';
 export class File implements vscode.FileStat {
 
@@ -102,7 +103,8 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 	onClickItem(element:MyTreeItem){
 		this.updateCheckBox(element);
 	}
-	
+
+
 	getTreeItem(element: MyTreeItem): vscode.TreeItem | Thenable<vscode.TreeItem> {
 
 		if(element.collapsibleState === TreeItemCollapsibleState.Collapsed || element.collapsibleState === TreeItemCollapsibleState.Expanded){
@@ -111,7 +113,6 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 			}else{
 				element.contextValue = "folder";
 			}
-
 			return element;
 		}
 
@@ -148,7 +149,6 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 			}
 		}
 
-		
 		return treeItem;
 	}
 	async getChildren(element?: MyTreeItem | undefined): Promise<MyTreeItem[]> {
