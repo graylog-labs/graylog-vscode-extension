@@ -57,6 +57,13 @@ function activate(context) {
     context.subscriptions.push(vscode.commands.registerCommand('graylog.MultiSelect', () => {
         graylog.updateTreeViewMode();
     }));
+    const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
+    statusBarItem.show();
+    // statusBarItem.color = new vscode.ThemeColor('statusBarItem.errorBackground');
+    statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
+    context.subscriptions.push(vscode.commands.registerCommand('graylog.setStatusBar', (text) => {
+        statusBarItem.text = text;
+    }));
     context.subscriptions.push(vscode.commands.registerCommand('graylog.exportToContext', async () => {
         ///action for export to content pack
         await connectpart.createContentPack();

@@ -119,3 +119,6 @@ src/test/runTest.ts
 
 #out files
 out/
+
+.js
+.mp

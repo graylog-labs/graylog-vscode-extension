@@ -29,3 +29,13 @@ export enum createEditStatus{
     edit = 2,
     normal = 3
 }
+
+export interface PipleLine{
+    id: string,
+    title: string,
+    description: string,
+    source: string,
+    stages: Array<any>,
+    errors: null | Array<any>,
+    usedInRules: Array<string>
+}
