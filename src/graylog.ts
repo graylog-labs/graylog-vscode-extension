@@ -3,7 +3,7 @@ import { GraylogFileSystemProvider, MyTreeItem } from './fileSystemProvider';
 import { DecorationInstanceRenderOptions } from 'vscode';
 import { replaceLinebreaks, truncateString,getPathSeparator } from './utils';
 import { newFileSource, errorForeground, errorMessageBackground, errorBackgroundLight, errorForegroundLight, icon} from './constants';
-import {RuleField, sourceError, apiInstance} from './interfaces';
+import {RuleField, sourceError, apiInstance, PipleLine} from './interfaces';
 import { API } from './api';
 
 
@@ -19,6 +19,7 @@ export class ConnectionPart{
     public errors:sourceError[]=[];
     public apiInfoList:any[] = [];
 
+    public pipleLines:PipleLine[][] = [];
     public apiSettingInfo:string = "";
     
     api:API;
@@ -106,13 +107,14 @@ export class ConnectionPart{
       }
       
       
+      this.setActiveStatusText( gIndex, this.grules[gIndex][dindex].title);
       let id = this.grules[gIndex][dindex].id;
-      let rulesource =await this.api.getRuleSource(rootIndex,id);
+      let rulesource =await this.api.getRuleSource( rootIndex, id );
       rulesource['source']=document.getText();
       delete rulesource['errors'];
 
 
-      this.errors = await this.api.getErrorLines(rootIndex,id,rulesource);
+      this.errors = await this.api.getErrorLines( rootIndex, id, rulesource);
 
       let ranges:vscode.Range[]=[];
       let decorationOptions:vscode.DecorationOptions[] = [];
@@ -194,6 +196,31 @@ export class ConnectionPart{
           });
   
           this.grules.push(tempArray);
+
+          let pipelines =await this.api.getAllPipeLines(this.apis['apiInfoList'][num]['apiHostUrl'],this.apis['apiInfoList'][num]['token']);
+          let tempPipelineArray:PipleLine[]=[];
+          pipelines.map((pipeline : any)=>{
+            const usedin:string[] = [];
+            pipeline['stages'].forEach(( stage: any )=>{
+              stage['rules'].forEach( (ruleName:string) => {
+                if(!usedin.includes(ruleName)){
+                  usedin.push(ruleName);
+                }
+              });
+            });
+            tempPipelineArray.push({  
+              id: pipeline['id'],
+              title: pipeline['title'],
+              description: pipeline['description'],
+              source: pipeline['source'],
+              stages: pipeline['stages'],
+              errors: pipeline['errors'],
+              usedInRules: usedin
+            });
+          });
+  
+          this.pipleLines.push(tempPipelineArray);
+
         }else{
           vscode.window.showErrorMessage("API Info is not correct. Please check again...");
         }
@@ -249,6 +276,31 @@ export class ConnectionPart{
             }
           }
           this.grules[index] = updatedgRules;
+
+
+          let pipelines =await this.api.getAllPipeLines(this.apis['apiInfoList'][index]['apiHostUrl'],this.apis['apiInfoList'][index]['token']);
+          let tempPipelineArray:PipleLine[]=[];
+          pipelines.map((pipeline : any)=>{
+            const usedin:string[] = [];
+            pipeline['stages'].forEach(( stage: any )=>{
+              stage['rules'].forEach( (ruleName:string) => {
+                if(!usedin.includes(ruleName)){
+                  usedin.push(ruleName);
+                }
+              });
+            });
+            tempPipelineArray.push({  
+              id: pipeline['id'],
+              title: pipeline['title'],
+              description: pipeline['description'],
+              source: pipeline['source'],
+              stages: pipeline['stages'],
+              errors: pipeline['errors'],
+              usedInRules: usedin
+            });
+          });
+  
+          this.pipleLines.push(tempPipelineArray);
         }
   
         this.graylogFilesystem.refresh();
@@ -389,6 +441,19 @@ export class ConnectionPart{
       const rootIndex = this.apis["apiInfoList"].findIndex((info:any)=>info['name'] === rootFolderName);
       this.api.createRule(rootIndex,value);
       vscode.commands.executeCommand("graylog.RereshWorkSpace");
+    }
+    //#endregion
+
+    //#regin status bar
+    setActiveStatusText( rootIndex: number, title: string){
+      let tmpPipelines:string[] = [];
+      this.pipleLines[rootIndex].map(pipleline =>{
+        if(pipleline.usedInRules.includes(title)){
+          tmpPipelines.push(pipleline.title);
+        }
+      });
+
+      vscode.commands.executeCommand('graylog.setStatusBar',`Used in pipelines: ${tmpPipelines.join(',')}`);
     }
     //#endregion
   }

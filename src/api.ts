@@ -268,4 +268,24 @@ export class API{
       }
       
     }
+
+
+
+  public async getAllPipeLines(url:string,token:string):Promise<[]>{
+      try{
+        const response = await axios.get(`${url}/api/system/pipelines/pipeline`, {
+          headers: {
+            'Accept': 'application/json'
+          },
+          auth: {
+            username: token,
+            password: this.accountPassword
+          }
+        });
+
+        return response.data;
+      }catch(e){
+      }
+      return [];
+  }
 }
