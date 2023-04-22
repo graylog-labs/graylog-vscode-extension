@@ -90,10 +90,13 @@ export function activate(context: vscode.ExtensionContext) {
 	}));
 
 	vscode.workspace.onDidChangeTextDocument((e)=>{
+		checkStatusBarShowing(e?.document.uri.scheme,statusBarItem);
 		connectpart.onDidChange(e?.document);
 	});
 	
 	vscode.window.onDidChangeActiveTextEditor(e=>{
+		checkStatusBarShowing(e?.document.uri.scheme,statusBarItem);
+
 		if(e?.document){
 			connectpart.onDidChange(e?.document);
 		}
@@ -113,3 +116,12 @@ export function activate(context: vscode.ExtensionContext) {
 
 
 
+function checkStatusBarShowing( scheme: string | undefined, item: vscode.StatusBarItem ){
+	if(!scheme) {
+		return;
+	}
+
+	if( scheme === 'graylog'){
+		item.show();
+	}else{ item.hide(); }
+}

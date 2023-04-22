@@ -70,9 +70,11 @@ function activate(context) {
         vscode.commands.executeCommand("graylog.MultiSelect");
     }));
     vscode.workspace.onDidChangeTextDocument((e) => {
+        checkStatusBarShowing(e?.document.uri.scheme, statusBarItem);
         connectpart.onDidChange(e?.document);
     });
     vscode.window.onDidChangeActiveTextEditor(e => {
+        checkStatusBarShowing(e?.document.uri.scheme, statusBarItem);
         if (e?.document) {
             connectpart.onDidChange(e?.document);
         }
@@ -88,4 +90,15 @@ function activate(context) {
     });
 }
 exports.activate = activate;
+function checkStatusBarShowing(scheme, item) {
+    if (!scheme) {
+        return;
+    }
+    if (scheme === 'graylog') {
+        item.show();
+    }
+    else {
+        item.hide();
+    }
+}
 //# sourceMappingURL=extension.js.map
