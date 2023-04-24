@@ -49,9 +49,11 @@ export function activate(context: vscode.ExtensionContext) {
 		// connectpart.createNewRule(item);
 	}));
 	
+
 	context.subscriptions.push(vscode.commands.registerCommand('graylog.selectInstances',async ()=>{
 		await connectpart.initSettings();
 		const items=[];
+		const quickItems = [];
 		if(connectpart.apis.apiInfoList && connectpart.apis.apiInfoList.length > 0)
 		{
 			for(let i=0;i<connectpart.apis.apiInfoList.length ;i++){
@@ -59,14 +61,17 @@ export function activate(context: vscode.ExtensionContext) {
 					label: connectpart.apis.apiInfoList[i]['apiHostUrl'],
 					index: i
 				});
+				quickItems.push(connectpart.apis.apiInfoList[i]['apiHostUrl']);
 			}
-			const result = await vscode.window.showQuickPick(items, {
-				canPickMany: true,
-				placeHolder: 'Select Servers',
-			  });
+			const result = await vscode.window.showQuickPick(quickItems, { placeHolder: "Please select the server" });
+			const resultIndex = quickItems.findIndex((item)=> item === result);
+			// const result = await vscode.window.showQuickPick(items, {
+			// 	canPickMany: true,
+			// 	placeHolder: 'Select Servers',
+			//   });
 			  
-			if (result) {
-				connectpart.clearworkspace(result);
+			if (result && resultIndex > -1) {
+				connectpart.clearworkspace([{ label: result, index: resultIndex}]);
 			}
 		}
 	}));
@@ -102,6 +107,12 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
+	vscode.window.onDidChangeVisibleTextEditors(event=>{
+		if(vscode.window.activeTextEditor){
+			checkStatusBarShowing(vscode.window.activeTextEditor?.document.uri.scheme,statusBarItem);
+		}
+		else { statusBarItem.hide(); }
+	});
 	vscode.workspace.onDidCreateFiles((e)=>{
 		e.files.map((file)=>{
 			let name = file.path.replace("/","").split('.')[0];
