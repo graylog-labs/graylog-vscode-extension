@@ -65,10 +65,6 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 			const result = await vscode.window.showQuickPick(quickItems, { placeHolder: "Please select the server" });
 			const resultIndex = quickItems.findIndex((item)=> item === result);
-			// const result = await vscode.window.showQuickPick(items, {
-			// 	canPickMany: true,
-			// 	placeHolder: 'Select Servers',
-			//   });
 			  
 			if (result && resultIndex > -1) {
 				connectpart.clearworkspace([{ label: result, index: resultIndex}]);
