@@ -35,8 +35,8 @@
     },
     "commands": [
       {
-        "command": "graylog.RereshWorkSpace",
-        "title": "Refresh rules from server",
+        "command": "graylog.RefreshWorkSpace",
+        "title": "Reload remote rules",
         "category": "Graylog",
         "icon": {
           "light": "resources/light/refresh.svg",
@@ -54,7 +54,7 @@
       },
       {
         "command": "graylog.settingApiInfo",
-        "title": "Setting of API",
+        "title": "Settings",
         "category": "Graylog",
         "icon": {
           "light": "resources/setting.svg",
@@ -71,35 +71,27 @@
         }
       },
       {
-        "command": "graylog.exportToContext",
-        "title": "Export To Content Pack",
-        "category": "Graylog"
+        "command": "graylog.exportToContext"
       },
       {
-        "command": "graylog.treeItemClick",
-        "title": "Event for selected TreeItem",
-        "category": "Graylog"
+        "command": "graylog.treeItemClick"
       },
       {
-        "command": "graylog.saveToLocal",
-        "title": "Save To Local Folder",
-        "category": "Graylog"
+        "command": "graylog.saveToLocal"
       },
       {
         "command": "graylog.createNewRule",
-        "title": "New Pipleline Rule",
+        "title": "New Pipeline Rule",
         "category": "Graylog"
       },
       {
-        "command": "graylog.setStatusBar",
-        "title": "Set status bar text",
-        "category": "Graylog"
+        "command": "graylog.setStatusBar"
       }
     ],
     "menus": {
       "view/title": [
         {
-          "command": "graylog.RereshWorkSpace",
+          "command": "graylog.RefreshWorkSpace",
           "group": "navigation",
           "when": "view == graylog"
         },

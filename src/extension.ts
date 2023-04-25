@@ -20,7 +20,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.workspace.registerFileSystemProvider('graylog', graylog, { isCaseSensitive: true }));
 	const treeview = vscode.window.createTreeView('graylog',{ treeDataProvider:graylog });	
 
-	context.subscriptions.push(vscode.commands.registerCommand('graylog.RereshWorkSpace', async () => {
+	context.subscriptions.push(vscode.commands.registerCommand('graylog.RefreshWorkSpace', async () => {
 		connectpart.refreshWorkspace();
 	}));
 	

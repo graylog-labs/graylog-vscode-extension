@@ -440,7 +440,7 @@ export class ConnectionPart{
       let rootFolderName = item.pathUri.path.split(/[\\|/]/)[1];
       const rootIndex = this.apis["graylogSettings"].findIndex((info:any)=>info['name'] === rootFolderName);
       this.api.createRule(rootIndex,value);
-      vscode.commands.executeCommand("graylog.RereshWorkSpace");
+      vscode.commands.executeCommand("graylog.RefreshWorkSpace");
     }
     //#endregion
 
