@@ -9,8 +9,7 @@ Features:
 * Create a new Rule directly from your workspace
 * Live syntax highlighting - using your Graylog instance, so the version will always be correct
 
-
-# Getting Started
+# Before Using this Extension
 
 ## Create a Graylog User token
 
@@ -19,17 +18,45 @@ Features:
 * Click `Edit Tokens` on the far right
 * Create a new token with a meaningful name and copy it to clipboard
 
-## Configure the Extension
+## Configure the Settings
 
 Open the Command Pallette
 
 Windows: `F1`
 Mac: `CMD` + `SHIFT` + `P`
 
-Choose `Graylog: Setup Workspace`
+Choose `Graylog: Settings`
 
-Enter the address of your preferred Graylog instance - either self-hosted `http://10.10.100.100:9000` or Cloud `https://myinstance.graylog.cloud` and enter the token when requested. 
+Enter the following minimum details, you can enter multiple servers as objects: 
+```
+{"graylogSettings":[
+    {"serverUrl":"https://myinstance.graylog.cloud",
+    "token":"c0ffeeb4d455",
+    "name":"My Cloud"}, 
+    {"serverUrl":"http://10.10.10.10:9000",
+    "token":"beddedcafebabe",
+    "name":"My Local Dev"}
+]
+}
+```
+
+| serverUrl | The url of the Graylog instance                                       |
+|-----------|-----------------------------------------------------------------------|
+| token     | The access token used to contact the API.  See above for instructions |
+| name      | The Display Name for this instance                                    |
+
 
 ## Using the Extension
 
-You will now have a new folder in your Workspace.  In order to retrieve this repeatably, you must save the workspace.  It is a good habit to refresh any running Web versions of the console to ensure you have the latest iterations.  
+### Features
+
+* Connect to Multiple Graylog Instances (Global Clusters, Dev and Prod, Tenants)
+* Edit rules directly on a server
+* Save rules directly to a server
+* View currently assigned pipelines (Status Bar below)
+* Syntax highlighting
+* Syntax checking directly from API (avoid version mismatches)
+* *Export Multiple Rules to Content Pack* (BETA)
+* * Activate the multiselect button on the top right of the extension view
+* * Select Multiple Rules
+* * Right Click (Or use Command Palette) - Export to Content Pack
