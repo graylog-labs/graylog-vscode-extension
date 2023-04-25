@@ -17,7 +17,7 @@ export class ConnectionPart{
     indexes:number[]=[];
     public grules:RuleField[][] =[];
     public errors:sourceError[]=[];
-    public apiInfoList:any[] = [];
+    public graylogSettings:any[] = [];
 
     public pipleLines:PipleLine[][] = [];
     public apiSettingInfo:string = "";
@@ -35,7 +35,7 @@ export class ConnectionPart{
       const firstSlashIndex = filename.indexOf(this.pathSeparator);
       const serverName = filename.substring(0,firstSlashIndex);
       const newRulename = filename.substring(firstSlashIndex+1);
-      const rootIndex = this.apis['apiInfoList'].findIndex((element:apiInstance)=>{
+      const rootIndex = this.apis['graylogSettings'].findIndex((element:apiInstance)=>{
         return element.name === serverName;
       });
       if(rootIndex === -1) {
@@ -86,12 +86,12 @@ export class ConnectionPart{
       }
 
       const rootFolderName = document.fileName.split(this.pathSeparator)[1];
-      let rootIndex = this.apis["apiInfoList"].findIndex((info:any)=>info['name'] === rootFolderName);
+      let rootIndex = this.apis["graylogSettings"].findIndex((info:any)=>info['name'] === rootFolderName);
       if(rootIndex === -1) {
         return;
       }
       const gIndex = this.indexes.findIndex((iIndex:number)=>{
-        if(this.apis['apiInfoList'][iIndex]['name'] === rootFolderName){
+        if(this.apis['graylogSettings'][iIndex]['name'] === rootFolderName){
           return true;
         }
       });
@@ -167,7 +167,7 @@ export class ConnectionPart{
     public wrilteFile(rootIndex:number,rule:any){
       let paths = rule['title'].split(/[\\/]/);
       let cumulative = "";
-      let name = this.apis['apiInfoList'][rootIndex]['name'];
+      let name = this.apis['graylogSettings'][rootIndex]['name'];
       if(paths.length > 1){
         for(let i=0;i<paths.length -1 ; i++){
           if(!this.graylogFilesystem.pathExists(vscode.Uri.parse(`graylog:/${name}/${cumulative}${paths[i]}`))){
@@ -182,9 +182,9 @@ export class ConnectionPart{
     
     public async prepareForwork(){
       this.indexes.forEach(async (num)=>{
-        this.graylogFilesystem.createDirectory(vscode.Uri.parse(`graylog:/${this.apis['apiInfoList'][num]['name']}`));
-        if(await this.logInfoCheck(this.apis['apiInfoList'][num]['apiHostUrl'],this.apis['apiInfoList'][num]['token'])){
-          let rules =await this.api.getAllRules(this.apis['apiInfoList'][num]['apiHostUrl'],this.apis['apiInfoList'][num]['token']);
+        this.graylogFilesystem.createDirectory(vscode.Uri.parse(`graylog:/${this.apis['graylogSettings'][num]['name']}`));
+        if(await this.logInfoCheck(this.apis['graylogSettings'][num]['serverUrl'],this.apis['graylogSettings'][num]['token'])){
+          let rules =await this.api.getAllRules(this.apis['graylogSettings'][num]['serverUrl'],this.apis['graylogSettings'][num]['token']);
           let tempArray:RuleField[]=[];
           rules.map((rule)=>{
             this.wrilteFile(num,rule);
@@ -197,7 +197,7 @@ export class ConnectionPart{
   
           this.grules.push(tempArray);
 
-          let pipelines =await this.api.getAllPipeLines(this.apis['apiInfoList'][num]['apiHostUrl'],this.apis['apiInfoList'][num]['token']);
+          let pipelines =await this.api.getAllPipeLines(this.apis['graylogSettings'][num]['serverUrl'],this.apis['graylogSettings'][num]['token']);
           let tempPipelineArray:PipleLine[]=[];
           pipelines.map((pipeline : any)=>{
             const usedin:string[] = [];
@@ -255,7 +255,7 @@ export class ConnectionPart{
       vscode.workspace.saveAll().then(async ()=>{
         for(let index=0;index<this.indexes.length;index++){
           const indexNum = this.indexes[index];
-          let tempRules = await this.api.getAllRules(this.apis['apiInfoList'][indexNum]['apiHostUrl'],this.apis['apiInfoList'][indexNum]['token']);
+          let tempRules = await this.api.getAllRules(this.apis['graylogSettings'][indexNum]['serverUrl'],this.apis['graylogSettings'][indexNum]['token']);
           for(const tmpRule of tempRules){
             let fIdx = this.grules[index].findIndex((rule)=> rule['title'] === tmpRule['title']);
             if(fIdx > -1){
@@ -270,7 +270,7 @@ export class ConnectionPart{
           for(const tmpgRule of this.grules[index]){
             let fIdx = tempRules.findIndex((tmprule)=> tmpgRule['title'] === tmprule['title']);
             if(fIdx === -1){
-              this.graylogFilesystem.delete(vscode.Uri.parse(`graylog:/${this.apis['apiInfoList'][indexNum]['name']}/${tmpgRule['title']}.grule`));
+              this.graylogFilesystem.delete(vscode.Uri.parse(`graylog:/${this.apis['graylogSettings'][indexNum]['name']}/${tmpgRule['title']}.grule`));
             }else {
               updatedgRules.push(tmpgRule);
             }
@@ -278,7 +278,7 @@ export class ConnectionPart{
           this.grules[index] = updatedgRules;
 
 
-          let pipelines =await this.api.getAllPipeLines(this.apis['apiInfoList'][index]['apiHostUrl'],this.apis['apiInfoList'][index]['token']);
+          let pipelines =await this.api.getAllPipeLines(this.apis['graylogSettings'][index]['serverUrl'],this.apis['graylogSettings'][index]['token']);
           let tempPipelineArray:PipleLine[]=[];
           pipelines.map((pipeline : any)=>{
             const usedin:string[] = [];
@@ -308,12 +308,12 @@ export class ConnectionPart{
     }
 
     public readRule(rootIndex:number,filePath: string){
-      return this.graylogFilesystem.readFile(vscode.Uri.parse(`graylog:/${this.apis['apiInfoList'][rootIndex]['name']}/${filePath}.grule`));
+      return this.graylogFilesystem.readFile(vscode.Uri.parse(`graylog:/${this.apis['graylogSettings'][rootIndex]['name']}/${filePath}.grule`));
     }
     public updateRule(rootIndex:number,registeredRule:RuleField,updatedRule:any){
       let readdata="";
       if(updatedRule['source'] !== (readdata=this.readRule(rootIndex,registeredRule.title).toString())){
-        this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/${this.apis['apiInfoList'][rootIndex]['name']}/${registeredRule['title']}.grule`), Buffer.from(updatedRule['source']), { create: true, overwrite: true });
+        this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/${this.apis['graylogSettings'][rootIndex]['name']}/${registeredRule['title']}.grule`), Buffer.from(updatedRule['source']), { create: true, overwrite: true });
       }
     }
 
@@ -323,7 +323,7 @@ export class ConnectionPart{
       if(data){
         this.apiSettingInfo = data;
       }else{
-        this.apiSettingInfo = JSON.stringify({"apiInfoList":[{"apiHostUrl":"","token":"","name":"Development"}]});
+        this.apiSettingInfo = JSON.stringify({"graylogSettings":[{"serverUrl":"","token":"","name":"Development"}]});
       }
 
       this.apis = JSON.parse(this.apiSettingInfo);
@@ -349,7 +349,7 @@ export class ConnectionPart{
     }
 
     async chekcInfo(){
-      if(!this.apis['apiInfoList']){
+      if(!this.apis['graylogSettings']){
         await this.readSettingApiInfo();
       }
     }
@@ -372,7 +372,7 @@ export class ConnectionPart{
       }
       
       let rootFolderName = items[0].pathUri.path.split(/[\\|/]/)[1];
-      const rootIndex = this.apis["apiInfoList"].findIndex((info:any)=>info['name'] === rootFolderName);
+      const rootIndex = this.apis["graylogSettings"].findIndex((info:any)=>info['name'] === rootFolderName);
       await this.api.createContentPack(rootIndex,ids);
       // await this.api.createContentPack(rootIndex);
     }
@@ -383,10 +383,10 @@ export class ConnectionPart{
       
       
       title = title.replace(rootFolderName,"").substring(1).replace(/[\\|/]/,'/').replace(".grule","");
-      const rootIndex = this.apis["apiInfoList"].findIndex((info:any)=>info['name'] === rootFolderName);
+      const rootIndex = this.apis["graylogSettings"].findIndex((info:any)=>info['name'] === rootFolderName);
 
       const gIndex = this.indexes.findIndex((iIndex:number)=>{
-        if(this.apis['apiInfoList'][iIndex]['name'] === rootFolderName){
+        if(this.apis['graylogSettings'][iIndex]['name'] === rootFolderName){
           return true;
         }
       });
@@ -438,7 +438,7 @@ export class ConnectionPart{
 
     async createNewRule(item: MyTreeItem, value :string){
       let rootFolderName = item.pathUri.path.split(/[\\|/]/)[1];
-      const rootIndex = this.apis["apiInfoList"].findIndex((info:any)=>info['name'] === rootFolderName);
+      const rootIndex = this.apis["graylogSettings"].findIndex((info:any)=>info['name'] === rootFolderName);
       this.api.createRule(rootIndex,value);
       vscode.commands.executeCommand("graylog.RereshWorkSpace");
     }

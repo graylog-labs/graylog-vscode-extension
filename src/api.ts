@@ -56,12 +56,12 @@ export class API{
     
     async getRuleSource(instanceIndex:number,id:string){
         try{
-          const response = await axios.get(`${this.apis['apiInfoList'][instanceIndex]['apiHostUrl']}/api/system/pipelines/rule/${id}`, {
+          const response = await axios.get(`${this.apis['graylogSettings'][instanceIndex]['serverUrl']}/api/system/pipelines/rule/${id}`, {
             headers: {
               'Accept': 'application/json'
             },
             auth: {
-              username: this.apis['apiInfoList'][instanceIndex]['token'],
+              username: this.apis['graylogSettings'][instanceIndex]['token'],
               password: this.accountPassword
             }
           });
@@ -75,16 +75,16 @@ export class API{
       const result:sourceError[] =[];
       try{
         await axios.put(
-          `${this.apis['apiInfoList'][rootIndex]['apiHostUrl']}/api/system/pipelines/rule/${id}`
+          `${this.apis['graylogSettings'][rootIndex]['serverUrl']}/api/system/pipelines/rule/${id}`
           ,rulesource,
           {
             headers: {
               Accept: 'application/json',
               'Content-Type': 'application/json',
-              'X-Requested-By':this.apis['apiInfoList'][rootIndex]['token']
+              'X-Requested-By':this.apis['graylogSettings'][rootIndex]['token']
             },
             auth: {
-              username: this.apis['apiInfoList'][rootIndex]['token'],
+              username: this.apis['graylogSettings'][rootIndex]['token'],
               password: this.accountPassword
             }
           }
@@ -127,12 +127,12 @@ export class API{
     async getFacilityAndServerVersion(rootIndex:number):Promise<{facility:string,version:string} | undefined>{
 
       try{
-        const response = await axios.get(`${this.apis['apiInfoList'][rootIndex].apiHostUrl}/api/system`, {
+        const response = await axios.get(`${this.apis['graylogSettings'][rootIndex].serverUrl}/api/system`, {
           headers: {
             'Accept': 'application/json'
           },
           auth: {
-            username: this.apis['apiInfoList'][rootIndex].token,
+            username: this.apis['graylogSettings'][rootIndex].token,
             password: this.accountPassword
           }
         });
@@ -149,14 +149,14 @@ export class API{
     }
     async getRuleConstraint(rootIndex:number,id: string){
       
-        const response = await axios.post(`${this.apis['apiInfoList'][rootIndex].apiHostUrl}/api/system/content_packs/generate_id`, {},{
+        const response = await axios.post(`${this.apis['graylogSettings'][rootIndex].serverUrl}/api/system/content_packs/generate_id`, {},{
           headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
-            'X-Requested-By':this.apis['apiInfoList'][rootIndex].token
+            'X-Requested-By':this.apis['graylogSettings'][rootIndex].token
           },
           auth: {
-            username: this.apis['apiInfoList'][rootIndex].token,
+            username: this.apis['graylogSettings'][rootIndex].token,
             password: "token"
           }
         });
@@ -166,7 +166,7 @@ export class API{
 
     async createRule(rootIndex:number, title: string ):Promise<any>{
         const response = await axios.post(
-            `${this.apis['apiInfoList'][rootIndex].apiHostUrl}/api/system/pipelines/rule`
+            `${this.apis['graylogSettings'][rootIndex].serverUrl}/api/system/pipelines/rule`
             ,{
               title: title,
               source:newFileSource(title),
@@ -176,10 +176,10 @@ export class API{
               headers: {
                 Accept: 'application/json',
                 'Content-Type': 'application/json',
-                'X-Requested-By':this.apis['apiInfoList'][rootIndex].token
+                'X-Requested-By':this.apis['graylogSettings'][rootIndex].token
               },
               auth: {
-                username: this.apis['apiInfoList'][rootIndex].token,
+                username: this.apis['graylogSettings'][rootIndex].token,
                 password: this.accountPassword
               }
             }
@@ -193,9 +193,9 @@ export class API{
 
 
     async createContentPack(rootIndex:number,items:string[]){
-      const apiUrl =`${this.apis['apiInfoList'][rootIndex].apiHostUrl}/api/system/content_packs`;
+      const apiUrl =`${this.apis['graylogSettings'][rootIndex].serverUrl}/api/system/content_packs`;
       const data = await this.getFacilityAndServerVersion(rootIndex);
-      let hashString = `${this.apis['apiInfoList'][rootIndex].apiHostUrl} count=${items.length} `;
+      let hashString = `${this.apis['graylogSettings'][rootIndex].serverUrl} count=${items.length} `;
       hashString += items.join("");
       
       const entities =[];
@@ -207,7 +207,7 @@ export class API{
               "version": "1"
           },
           "v":"1",
-          "id": getFormatedHashValue(`pipeline_rule;${this.apis['apiInfoList'][rootIndex].apiHostUrl};${Date.now.toString()};${source.source}`),
+          "id": getFormatedHashValue(`pipeline_rule;${this.apis['graylogSettings'][rootIndex].serverUrl};${Date.now.toString()};${source.source}`),
           "data": {
               "title": {
                   "@type": "string",
@@ -238,7 +238,7 @@ export class API{
           apiUrl
           ,
           {
-            "id": getFormatedHashValue(`content_pack;${this.apis['apiInfoList'][rootIndex].apiHostUrl};${moment().format("YYYY-MM-DD HH:mm:ss")};${this.apis['apiInfoList'][rootIndex].token}`),
+            "id": getFormatedHashValue(`content_pack;${this.apis['graylogSettings'][rootIndex].serverUrl};${moment().format("YYYY-MM-DD HH:mm:ss")};${this.apis['graylogSettings'][rootIndex].token}`),
             "rev": 1,
             "v": "1",
             "name": contentPackName,
@@ -255,10 +255,10 @@ export class API{
             headers: {
               'Accept': 'application/json',
               'Content-Type': 'application/json',
-              'X-Requested-By':this.apis['apiInfoList'][rootIndex].token
+              'X-Requested-By':this.apis['graylogSettings'][rootIndex].token
             },
             auth: {
-              username: this.apis['apiInfoList'][rootIndex].token,
+              username: this.apis['graylogSettings'][rootIndex].token,
               password: "token"
             }
           }

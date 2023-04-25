@@ -39,13 +39,13 @@ function activate(context) {
         await connectpart.initSettings();
         const items = [];
         const quickItems = [];
-        if (connectpart.apis.apiInfoList && connectpart.apis.apiInfoList.length > 0) {
-            for (let i = 0; i < connectpart.apis.apiInfoList.length; i++) {
+        if (connectpart.apis.graylogSettings && connectpart.apis.graylogSettings.length > 0) {
+            for (let i = 0; i < connectpart.apis.graylogSettings.length; i++) {
                 items.push({
-                    label: connectpart.apis.apiInfoList[i]['apiHostUrl'],
+                    label: connectpart.apis.graylogSettings[i]['serverUrl'],
                     index: i
                 });
-                quickItems.push(connectpart.apis.apiInfoList[i]['apiHostUrl']);
+                quickItems.push(connectpart.apis.graylogSettings[i]['serverUrl']);
             }
             const result = await vscode.window.showQuickPick(quickItems, { placeHolder: "Please select the server" });
             const resultIndex = quickItems.findIndex((item) => item === result);
