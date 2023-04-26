@@ -12,7 +12,9 @@
     "Other"
   ],
   "main": "./out/extension.js",
+  
   "showLanguageModeIcons": true,
+
   "contributes": {
     "viewsContainers": {
       "activitybar": [
@@ -71,13 +73,16 @@
         }
       },
       {
-        "command": "graylog.exportToContext"
+        "command": "graylog.exportToContext",
+        "title": "Export As context"
       },
       {
-        "command": "graylog.treeItemClick"
+        "command": "graylog.treeItemClick",
+        "title": "click"
       },
       {
-        "command": "graylog.saveToLocal"
+        "command": "graylog.saveToLocal",
+        "title": "Save rules to local folder"
       },
       {
         "command": "graylog.createNewRule",
@@ -85,10 +90,44 @@
         "category": "Graylog"
       },
       {
-        "command": "graylog.setStatusBar"
+        "command": "graylog.setStatusBar",
+        "title": "Status Bar"
+      },
+      {
+        "command": "graylog.saveContentPack",
+        "title": "Save ContentPack",
+        "category": "Graylog",
+        "icon": {
+          "light": "resources/light/save.svg",
+          "dark": "resources/dark/save.svg"
+        }
       }
     ],
     "menus": {
+      "commandPalette":[
+        {
+					"command": "graylog.saveContentPack",
+          "title": "Save ContentPack",
+          "icon": {
+            "light": "resources/light/save.svg",
+            "dark": "resources/dark/save.svg"
+          },
+          "group": "navigation",
+          "when": "resourceScheme == graylog && resourceFilename == contentPack.json"
+				}
+      ],
+      "editor/title":[
+        {
+          "command": "graylog.saveContentPack",
+          "title": "Save ContentPack",
+          "group": "navigation",
+          "icon": {
+            "light": "resources/light/save.svg",
+            "dark": "resources/dark/save.svg"
+          },
+          "when": "resourceScheme == graylog && resourceFilename == contentPack.json"
+        }
+      ],
       "view/title": [
         {
           "command": "graylog.RefreshWorkSpace",

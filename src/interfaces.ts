@@ -39,3 +39,13 @@ export interface PipleLine{
     errors: null | Array<any>,
     usedInRules: Array<string>
 }
+
+export interface ServerInfo{
+    serverUrl: string,
+    token: string,
+    name: string
+}
+
+export interface Setting{
+    serverList: ServerInfo[]
+}

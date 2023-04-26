@@ -18,6 +18,16 @@ then
 end`;
 }
 
+export const InitGraylogSettingInfo = 
+`{
+  "graylogSettings":[
+    {
+      "serverUrl": "",
+      "token": "",
+      "name": ""
+    }
+  ]
+}`;
 
 export const BASE_PATH = `${vscode?.extensions?.getExtension('pdragon.task-graylog')?.extensionPath}/resources/`;
 export const ICON_PATH='error-inverse.svg';
