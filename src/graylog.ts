@@ -244,10 +244,18 @@ export class ConnectionPart{
       this.graylogFilesystem.refresh();
     }
 
-    
+    wait(time: number): Promise<void> {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve();
+        }, time);
+      });
+    }
+
     public async refreshWorkspace(){
       await vscode.workspace.saveAll();
-
+      await this.wait(1000);
+      
       const indexNum = this.index;
       let tempRules = await this.api.getAllRules(this.apis.serverList[indexNum]['serverUrl'],this.apis.serverList[indexNum]['token']);
       for(const tmpRule of tempRules){
