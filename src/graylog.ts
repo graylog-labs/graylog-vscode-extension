@@ -155,19 +155,25 @@ export class ConnectionPart{
     }
 
     public wrilteFile(rootIndex:number,rule:any){
-      let paths = rule['title'].split(/[\\/]/);
-      let cumulative = "";
-      let name = this.apis.serverList[rootIndex]['name'];
+      const paths = rule['title'].split(/[\\/]/);
+      let cumulative = vscode.Uri.parse('graylog:/');
+
+      const name = this.apis.serverList[rootIndex]['name'];
+      
+      const basePath = vscode.Uri.parse('graylog:/');
+
+      cumulative = vscode.Uri.joinPath( cumulative, name);
+
       if(paths.length > 1){
         for(let i=0;i<paths.length -1 ; i++){
-          if(!this.graylogFilesystem.pathExists(vscode.Uri.parse(`graylog:/${name}/${cumulative}${paths[i]}`))){
-            this.graylogFilesystem.createDirectory(vscode.Uri.parse(`graylog:/${name}/${cumulative}${paths[i]}`));
+          if(!this.graylogFilesystem.pathExists( vscode.Uri.joinPath( cumulative, paths[i] ) )){
+            this.graylogFilesystem.createDirectory( vscode.Uri.joinPath( cumulative, paths[i] ) );
           }
-
-          cumulative +=(paths[i] + "/");
+          cumulative = vscode.Uri.joinPath( cumulative, paths[i] );
         }
       }
-      this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/${name}/${rule['title']}.grule`), Buffer.from(rule['source']), { create: true, overwrite: true });
+
+      this.graylogFilesystem.writeFile(  vscode.Uri.joinPath( cumulative, `${paths[paths.length -1]}.grule` ), Buffer.from(rule['source']), { create: true, overwrite: true });
     }
     
     public async prepareForwork(){
@@ -298,10 +304,27 @@ export class ConnectionPart{
     public readRule(rootIndex:number,filePath: string){
       return this.graylogFilesystem.readFile(vscode.Uri.parse(`graylog:/${this.apis.serverList[rootIndex]['name']}/${filePath}.grule`));
     }
+
+    generateUriFromTitle(rootIndex: number, title: string): vscode.Uri{
+      const paths = title.split(/[\\/]/);
+
+      let cumulative = vscode.Uri.parse('graylog:/');
+      cumulative = vscode.Uri.joinPath( cumulative, this.apis.serverList[rootIndex]['name']);
+
+      for(let i=0;i<paths.length -1 ; i++){
+        cumulative = vscode.Uri.joinPath( cumulative, paths[i] );
+      }
+
+      cumulative = vscode.Uri.joinPath( cumulative, `${paths[paths.length-1]}.grule` );
+
+      return cumulative;
+    }
+
     public updateRule(rootIndex:number,registeredRule:RuleField,updatedRule:any){
-      let readdata="";
-      if(updatedRule['source'] !== (readdata=this.readRule(rootIndex,registeredRule.title).toString())){
-        this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/${this.apis.serverList[rootIndex]['name']}/${registeredRule['title']}.grule`), Buffer.from(updatedRule['source']), { create: true, overwrite: true });
+      const path = this.generateUriFromTitle(rootIndex, registeredRule.title);
+      
+      if(updatedRule['source'] !== this.readRule(rootIndex,registeredRule.title).toString() ){
+        this.graylogFilesystem.writeFile( path, Buffer.from(updatedRule['source']), { create: true, overwrite: true });
       }
     }
 
