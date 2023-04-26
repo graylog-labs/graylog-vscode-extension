@@ -13,7 +13,7 @@ function activate(context) {
     context.subscriptions.push(vscode.workspace.registerFileSystemProvider('graylog', graylog, { isCaseSensitive: true }));
     const treeview = vscode.window.createTreeView('graylog', { treeDataProvider: graylog });
     context.subscriptions.push(vscode.commands.registerCommand('graylog.RefreshWorkSpace', async () => {
-        connectpart.refreshWorkspace();
+        await connectpart.refreshWorkspace();
     }));
     context.subscriptions.push(vscode.commands.registerCommand('graylog.showCreateInputBox', async () => {
         console.log('---------------');

@@ -21,7 +21,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const treeview = vscode.window.createTreeView('graylog',{ treeDataProvider:graylog });	
 
 	context.subscriptions.push(vscode.commands.registerCommand('graylog.RefreshWorkSpace', async () => {
-		connectpart.refreshWorkspace();
+		await connectpart.refreshWorkspace();
 	}));
 	
 	context.subscriptions.push(vscode.commands.registerCommand('graylog.showCreateInputBox', async () => {

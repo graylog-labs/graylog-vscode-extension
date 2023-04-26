@@ -233,84 +233,71 @@ export class ConnectionPart{
     public async clearworkspace(result:{label:any,index:number}){
 
       this.index = result.index;
-
-      vscode.workspace.saveAll().then(()=>{
-        try {
-          vscode.commands.executeCommand('workbench.action.closeAllEditors').then(async ()=>{
-            try {
-              for (const [name] of this.graylogFilesystem.readDirectory(vscode.Uri.parse('graylog:/'))) {
-                this.graylogFilesystem.delete(vscode.Uri.parse(`graylog:/${name}`));
-              }
-              await this.prepareForwork();
-              this.graylogFilesystem.refresh();
-            } catch (error) {
-              console.log(error);
-            }
-          }); 
-        } catch (error) {
-          console.log(error);
-        }
-      });
+      await vscode.workspace.saveAll();
+      await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+      
+      for (const [name] of this.graylogFilesystem.readDirectory(vscode.Uri.parse('graylog:/'))) {
+          this.graylogFilesystem.delete(vscode.Uri.parse(`graylog:/${name}`));
+      }
+      
+      await this.prepareForwork();
+      this.graylogFilesystem.refresh();
     }
 
     
-    public refreshWorkspace(){
-      vscode.workspace.saveAll().then(async ()=>{
-          try {
-            const indexNum = this.index;
-            let tempRules = await this.api.getAllRules(this.apis.serverList[indexNum]['serverUrl'],this.apis.serverList[indexNum]['token']);
-            for(const tmpRule of tempRules){
-              let fIdx = this.grules.findIndex((rule)=> rule['title'] === tmpRule['title']);
-              if(fIdx > -1){
-                this.updateRule(indexNum,this.grules[fIdx],tmpRule);
-              }else{
-                this.grules.push(tmpRule);
-                this.wrilteFile(indexNum,tmpRule);
-              }
+    public async refreshWorkspace(){
+      await vscode.workspace.saveAll();
+
+      const indexNum = this.index;
+      let tempRules = await this.api.getAllRules(this.apis.serverList[indexNum]['serverUrl'],this.apis.serverList[indexNum]['token']);
+      for(const tmpRule of tempRules){
+        let fIdx = this.grules.findIndex((rule)=> rule['title'] === tmpRule['title']);
+        if(fIdx > -1){
+          this.updateRule(indexNum,this.grules[fIdx],tmpRule);
+        }else{
+          this.grules.push(tmpRule);
+          this.wrilteFile(indexNum,tmpRule);
+        }
+      }
+
+      const updatedgRules:RuleField[]=[];
+      for(const tmpgRule of this.grules){
+        let fIdx = tempRules.findIndex((tmprule)=> tmpgRule['title'] === tmprule['title']);
+        if(fIdx === -1){
+          this.graylogFilesystem.delete(vscode.Uri.parse(`graylog:/${this.apis.serverList[indexNum]['name']}/${tmpgRule['title']}.grule`));
+        }else {
+          updatedgRules.push(tmpgRule);
+        }
+      }
+      this.grules = updatedgRules;
+
+
+      let pipelines =await this.api.getAllPipeLines(this.apis.serverList[0]['serverUrl'],this.apis.serverList[0]['token']);
+      let tempPipelineArray:PipleLine[]=[];
+      pipelines.forEach((pipeline : any)=>{
+        const usedin:string[] = [];
+        pipeline['stages'].forEach(( stage: any )=>{
+          stage['rules'].forEach( (ruleName:string) => {
+            if(!usedin.includes(ruleName)){
+              usedin.push(ruleName);
             }
-    
-            const updatedgRules:RuleField[]=[];
-            for(const tmpgRule of this.grules){
-              let fIdx = tempRules.findIndex((tmprule)=> tmpgRule['title'] === tmprule['title']);
-              if(fIdx === -1){
-                this.graylogFilesystem.delete(vscode.Uri.parse(`graylog:/${this.apis.serverList[indexNum]['name']}/${tmpgRule['title']}.grule`));
-              }else {
-                updatedgRules.push(tmpgRule);
-              }
-            }
-            this.grules = updatedgRules;
+          });
+        });
+        tempPipelineArray.push({  
+          id: pipeline['id'],
+          title: pipeline['title'],
+          description: pipeline['description'],
+          source: pipeline['source'],
+          stages: pipeline['stages'],
+          errors: pipeline['errors'],
+          usedInRules: usedin
+        });
+      });
+
+      this.pipleLines.push(tempPipelineArray);
 
 
-            let pipelines =await this.api.getAllPipeLines(this.apis.serverList[0]['serverUrl'],this.apis.serverList[0]['token']);
-            let tempPipelineArray:PipleLine[]=[];
-            pipelines.forEach((pipeline : any)=>{
-              const usedin:string[] = [];
-              pipeline['stages'].forEach(( stage: any )=>{
-                stage['rules'].forEach( (ruleName:string) => {
-                  if(!usedin.includes(ruleName)){
-                    usedin.push(ruleName);
-                  }
-                });
-              });
-              tempPipelineArray.push({  
-                id: pipeline['id'],
-                title: pipeline['title'],
-                description: pipeline['description'],
-                source: pipeline['source'],
-                stages: pipeline['stages'],
-                errors: pipeline['errors'],
-                usedInRules: usedin
-              });
-            });
-    
-            this.pipleLines.push(tempPipelineArray);
-    
-
-          this.graylogFilesystem.refresh();
-          } catch (error) {
-            console.log(error);
-          }
-      });  
+      this.graylogFilesystem.refresh();
     }
 
     public readRule(rootIndex:number,filePath: string){
