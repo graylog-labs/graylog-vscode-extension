@@ -3,7 +3,7 @@
   "displayName": "Graylog Rules Manager",
   "description": "This is extension assists with managing your Pipeline rules in a running Graylog instance.",
   "icon": "media/logo.png",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "engines": {
     "vscode": "^1.76.0"
   },
@@ -12,7 +12,9 @@
     "Other"
   ],
   "main": "./out/extension.js",
+  
   "showLanguageModeIcons": true,
+
   "contributes": {
     "viewsContainers": {
       "activitybar": [
@@ -35,8 +37,8 @@
     },
     "commands": [
       {
-        "command": "graylog.RereshWorkSpace",
-        "title": "Refresh rules from server",
+        "command": "graylog.RefreshWorkSpace",
+        "title": "Reload remote rules",
         "category": "Graylog",
         "icon": {
           "light": "resources/light/refresh.svg",
@@ -54,7 +56,7 @@
       },
       {
         "command": "graylog.settingApiInfo",
-        "title": "Setting of API",
+        "title": "Settings",
         "category": "Graylog",
         "icon": {
           "light": "resources/setting.svg",
@@ -72,34 +74,63 @@
       },
       {
         "command": "graylog.exportToContext",
-        "title": "Export To Content Pack",
-        "category": "Graylog"
+        "title": "Export As context"
       },
       {
         "command": "graylog.treeItemClick",
-        "title": "Event for selected TreeItem",
-        "category": "Graylog"
+        "title": "click"
       },
       {
         "command": "graylog.saveToLocal",
-        "title": "Save To Local Folder",
-        "category": "Graylog"
+        "title": "Save rules to local folder"
       },
       {
         "command": "graylog.createNewRule",
-        "title": "New Pipleline Rule",
+        "title": "New Pipeline Rule",
         "category": "Graylog"
       },
       {
         "command": "graylog.setStatusBar",
-        "title": "Set status bar text",
-        "category": "Graylog"
+        "title": "Status Bar"
+      },
+      {
+        "command": "graylog.saveContentPack",
+        "title": "Save ContentPack",
+        "category": "Graylog",
+        "icon": {
+          "light": "resources/light/save.svg",
+          "dark": "resources/dark/save.svg"
+        }
       }
     ],
     "menus": {
+      "commandPalette":[
+        {
+					"command": "graylog.saveContentPack",
+          "title": "Save ContentPack",
+          "icon": {
+            "light": "resources/light/save.svg",
+            "dark": "resources/dark/save.svg"
+          },
+          "group": "navigation",
+          "when": "resourceScheme == graylog && resourceFilename == contentPack.json"
+				}
+      ],
+      "editor/title":[
+        {
+          "command": "graylog.saveContentPack",
+          "title": "Save ContentPack",
+          "group": "navigation",
+          "icon": {
+            "light": "resources/light/save.svg",
+            "dark": "resources/dark/save.svg"
+          },
+          "when": "resourceScheme == graylog && resourceFilename == contentPack.json"
+        }
+      ],
       "view/title": [
         {
-          "command": "graylog.RereshWorkSpace",
+          "command": "graylog.RefreshWorkSpace",
           "group": "navigation",
           "when": "view == graylog"
         },

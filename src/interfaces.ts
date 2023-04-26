@@ -14,7 +14,7 @@ export interface sourceError{
 }
 
 export interface apiInstance{
-    apiHostUrl: string,
+    serverUrl: string,
     token: string,
     name: string
 }
@@ -38,4 +38,14 @@ export interface PipleLine{
     stages: Array<any>,
     errors: null | Array<any>,
     usedInRules: Array<string>
+}
+
+export interface ServerInfo{
+    serverUrl: string,
+    token: string,
+    name: string
+}
+
+export interface Setting{
+    serverList: ServerInfo[]
 }

@@ -6,8 +6,9 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { TreeItemLabel } from 'vscode';
+
 import { TreeViewModes,createEditStatus } from './interfaces';
+
 export class File implements vscode.FileStat {
 
 	type: vscode.FileType;
@@ -183,10 +184,11 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 
 			const items: MyTreeItem[]= [];
 			this.readDirectory(pathUri).forEach((element)=>{
-				if(element[0] !== 'graylogSetting.json'){
+				if( !element[0].endsWith('.json') ){
 					items.push(toDep(element));
 				}
 			});
+
 			return items.sort((a:MyTreeItem,b:MyTreeItem)=>{
 				const getFileName = (pUri:vscode.Uri):string=>{
 					const paths=pUri.path.split(/[\\|/]/);
@@ -279,7 +281,10 @@ export class GraylogFileSystemProvider implements vscode.FileSystemProvider,vsco
 		entry.size = content.byteLength;
 		entry.data = content;
 
-		this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
+		if( !uri.path.endsWith('.json') ){
+			this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
+		}
+
 	}
 
 	// --- manage files/folders

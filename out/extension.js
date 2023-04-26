@@ -12,7 +12,7 @@ function activate(context) {
     const connectpart = new graylog_1.ConnectionPart(graylog, context.secrets);
     context.subscriptions.push(vscode.workspace.registerFileSystemProvider('graylog', graylog, { isCaseSensitive: true }));
     const treeview = vscode.window.createTreeView('graylog', { treeDataProvider: graylog });
-    context.subscriptions.push(vscode.commands.registerCommand('graylog.RereshWorkSpace', async () => {
+    context.subscriptions.push(vscode.commands.registerCommand('graylog.RefreshWorkSpace', async () => {
         connectpart.refreshWorkspace();
     }));
     context.subscriptions.push(vscode.commands.registerCommand('graylog.showCreateInputBox', async () => {
@@ -28,6 +28,14 @@ function activate(context) {
     context.subscriptions.push(vscode.commands.registerCommand('graylog.saveToLocal', (item) => {
         connectpart.saveToLocalFolder(item);
     }));
+    context.subscriptions.push(vscode.commands.registerCommand('graylog.saveContentPack', () => {
+        connectpart.saveActiveEditorContent();
+    }));
+    context.subscriptions.push(vscode.workspace.onDidSaveTextDocument((document) => {
+        if (document.fileName.endsWith("contentPack.json")) {
+            vscode.commands.executeCommand("graylog.saveContentPack");
+        }
+    }));
     context.subscriptions.push(vscode.commands.registerCommand('graylog.createNewRule', async (item) => {
         const value = await vscode.window.showInputBox({ prompt: 'Enter a value' });
         if (value) {
@@ -39,18 +47,18 @@ function activate(context) {
         await connectpart.initSettings();
         const items = [];
         const quickItems = [];
-        if (connectpart.apis.apiInfoList && connectpart.apis.apiInfoList.length > 0) {
-            for (let i = 0; i < connectpart.apis.apiInfoList.length; i++) {
+        if (connectpart.apis.serverList && connectpart.apis.serverList.length > 0) {
+            for (let i = 0; i < connectpart.apis.serverList.length; i++) {
                 items.push({
-                    label: connectpart.apis.apiInfoList[i]['apiHostUrl'],
+                    label: connectpart.apis.serverList[i]['serverUrl'],
                     index: i
                 });
-                quickItems.push(connectpart.apis.apiInfoList[i]['apiHostUrl']);
+                quickItems.push(connectpart.apis.serverList[i]['serverUrl']);
             }
             const result = await vscode.window.showQuickPick(quickItems, { placeHolder: "Please select the server" });
             const resultIndex = quickItems.findIndex((item) => item === result);
             if (result && resultIndex > -1) {
-                connectpart.clearworkspace([{ label: result, index: resultIndex }]);
+                connectpart.clearworkspace({ label: result, index: resultIndex });
             }
         }
     }));
@@ -59,7 +67,6 @@ function activate(context) {
     }));
     const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
     statusBarItem.show();
-    // statusBarItem.color = new vscode.ThemeColor('statusBarItem.errorBackground');
     statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
     context.subscriptions.push(vscode.commands.registerCommand('graylog.setStatusBar', (text) => {
         statusBarItem.text = text;

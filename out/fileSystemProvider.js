@@ -164,7 +164,7 @@ class GraylogFileSystemProvider {
             };
             const items = [];
             this.readDirectory(pathUri).forEach((element) => {
-                if (element[0] !== 'graylogSetting.json') {
+                if (!element[0].endsWith('.json')) {
                     items.push(toDep(element));
                 }
             });
@@ -244,7 +244,9 @@ class GraylogFileSystemProvider {
         entry.mtime = Date.now();
         entry.size = content.byteLength;
         entry.data = content;
-        this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
+        if (!uri.path.endsWith('.json')) {
+            this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
+        }
     }
     // --- manage files/folders
     rename(oldUri, newUri, options) {

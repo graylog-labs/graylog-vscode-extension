@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.icon = exports.errorBackgroundLight = exports.errorBackground = exports.errorMessageBackground = exports.errorForegroundLight = exports.errorForeground = exports.ICON_PATH = exports.BASE_PATH = exports.newFileSource = void 0;
+exports.icon = exports.errorBackgroundLight = exports.errorBackground = exports.errorMessageBackground = exports.errorForegroundLight = exports.errorForeground = exports.ICON_PATH = exports.BASE_PATH = exports.InitGraylogSettingInfo = exports.newFileSource = void 0;
 const vscode = require("vscode");
 function newFileSource(title) {
     return `rule "${title}"
@@ -20,6 +20,15 @@ then
 end`;
 }
 exports.newFileSource = newFileSource;
+exports.InitGraylogSettingInfo = `{
+  "graylogSettings":[
+    {
+      "serverUrl": "",
+      "token": "",
+      "name": ""
+    }
+  ]
+}`;
 exports.BASE_PATH = `${vscode?.extensions?.getExtension('pdragon.task-graylog')?.extensionPath}/resources/`;
 exports.ICON_PATH = 'error-inverse.svg';
 exports.errorForeground = new vscode.ThemeColor('graylog.errorForeground');
