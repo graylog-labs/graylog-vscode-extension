@@ -94,15 +94,6 @@ function activate(context) {
             statusBarItem.hide();
         }
     });
-    vscode.workspace.onDidCreateFiles((e) => {
-        e.files.map((file) => {
-            let name = file.path.replace("/", "").split('.')[0];
-            let extension = file.path.replace("/", "").split('.')[1];
-            if (file.scheme === 'graylog' && extension === 'grule') {
-                connectpart.createRule(name);
-            }
-        });
-    });
 }
 exports.activate = activate;
 function checkStatusBarShowing(scheme, item) {

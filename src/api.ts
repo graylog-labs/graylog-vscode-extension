@@ -91,7 +91,7 @@ export class API{
         );
       }catch(e){
         if(e.response?.data && Array.isArray(e.response?.data)){
-          e.response.data.map((edata:any)=>{
+          e.response.data.forEach((edata:any)=>{
             let tempdata:sourceError ={
               type: edata['type'],
               line: edata['line'],
