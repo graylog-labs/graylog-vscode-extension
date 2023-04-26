@@ -12,9 +12,7 @@
     "Other"
   ],
   "main": "./out/extension.js",
-  
   "showLanguageModeIcons": true,
-
   "contributes": {
     "viewsContainers": {
       "activitybar": [
@@ -65,7 +63,7 @@
       },
       {
         "command": "graylog.selectInstances",
-        "title": "Select Instances",
+        "title": "Select Active Server",
         "category": "Graylog",
         "icon": {
           "light": "resources/multiselect-enable.svg",
@@ -74,7 +72,7 @@
       },
       {
         "command": "graylog.exportToContext",
-        "title": "Export As context"
+        "title": "Export Content Pack"
       },
       {
         "command": "graylog.treeItemClick",
@@ -82,7 +80,8 @@
       },
       {
         "command": "graylog.saveToLocal",
-        "title": "Save rules to local folder"
+        "title": "Export Rules",
+        "category": "Graylog"
       },
       {
         "command": "graylog.createNewRule",
@@ -104,9 +103,9 @@
       }
     ],
     "menus": {
-      "commandPalette":[
+      "commandPalette": [
         {
-					"command": "graylog.saveContentPack",
+          "command": "graylog.saveContentPack",
           "title": "Save ContentPack",
           "icon": {
             "light": "resources/light/save.svg",
@@ -114,9 +113,9 @@
           },
           "group": "navigation",
           "when": "resourceScheme == graylog && resourceFilename == contentPack.json"
-				}
+        }
       ],
-      "editor/title":[
+      "editor/title": [
         {
           "command": "graylog.saveContentPack",
           "title": "Save ContentPack",
