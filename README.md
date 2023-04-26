@@ -14,7 +14,7 @@ Features:
 ## Create a Graylog User token
 
 * Log in to your Graylog console
-* Click the user Pawn icon in the top right and choose 'Profile'.
+* Click the user Pawn icon in the top right and choose 'Edit Profile'.
 * Click `Edit Tokens` on the far right
 * Create a new token with a meaningful name and copy it to clipboard
 
