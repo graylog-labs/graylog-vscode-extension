@@ -13,7 +13,7 @@ function activate(context) {
     context.subscriptions.push(vscode.workspace.registerFileSystemProvider('graylog', graylog, { isCaseSensitive: true }));
     const treeview = vscode.window.createTreeView('graylog', { treeDataProvider: graylog });
     context.subscriptions.push(vscode.commands.registerCommand('graylog.RefreshWorkSpace', async () => {
-        connectpart.refreshWorkspace();
+        await connectpart.refreshWorkspace();
     }));
     context.subscriptions.push(vscode.commands.registerCommand('graylog.showCreateInputBox', async () => {
         console.log('---------------');
@@ -93,15 +93,6 @@ function activate(context) {
         else {
             statusBarItem.hide();
         }
-    });
-    vscode.workspace.onDidCreateFiles((e) => {
-        e.files.map((file) => {
-            let name = file.path.replace("/", "").split('.')[0];
-            let extension = file.path.replace("/", "").split('.')[1];
-            if (file.scheme === 'graylog' && extension === 'grule') {
-                connectpart.createRule(name);
-            }
-        });
     });
 }
 exports.activate = activate;

@@ -14,7 +14,7 @@ class CodelensProvider {
     }
     provideCodeLenses(document, token) {
         this.codeLenses = [];
-        this.connectpart.errors.map((error) => {
+        this.connectpart.errors.forEach((error) => {
             let line = error.line;
             let indexOf = error.position_in_line;
             let position = new vscode.Position(line, indexOf);
