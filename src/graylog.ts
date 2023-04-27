@@ -468,6 +468,7 @@ export class ConnectionPart{
     //#region
 
     async saveActiveEditorContent(){
+      await vscode.window.activeTextEditor?.document.save();
       const uri = await vscode.window.showSaveDialog({
         saveLabel: "Save ContentPack",
         title: "Save ContentPack",
