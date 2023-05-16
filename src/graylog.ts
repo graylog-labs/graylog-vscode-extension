@@ -340,7 +340,7 @@ export class ConnectionPart{
     //#region read and write apiInfo to storage
     public async readSettingApiInfo(){
       const data= await this.secretStorage.get("graylogSetting");
-      if(data){
+      if(data && JSON.parse(data)['graylogSettings']){
         this.apiSettingInfo = data;
       }else{
         this.apiSettingInfo = InitGraylogSettingInfo;
