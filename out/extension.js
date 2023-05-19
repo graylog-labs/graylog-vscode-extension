@@ -9,7 +9,7 @@ const colorData = require('../themes/color');
 function activate(context) {
     (0, utils_1.addColorSettings)(colorData);
     const graylog = new fileSystemProvider_1.GraylogFileSystemProvider();
-    const connectpart = new graylog_1.ConnectionPart(graylog, context.secrets);
+    const connectpart = new graylog_1.ConnectionPart(graylog, context.secrets, context.extensionUri);
     context.subscriptions.push(vscode.workspace.registerFileSystemProvider('graylog', graylog, { isCaseSensitive: true }));
     const treeview = vscode.window.createTreeView('graylog', { treeDataProvider: graylog });
     context.subscriptions.push(vscode.commands.registerCommand('graylog.RefreshWorkSpace', async () => {

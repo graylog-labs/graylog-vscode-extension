@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.icon = exports.errorBackgroundLight = exports.errorBackground = exports.errorMessageBackground = exports.errorForegroundLight = exports.errorForeground = exports.ICON_PATH = exports.BASE_PATH = exports.InitGraylogSettingInfo = exports.newFileSource = void 0;
+exports.crtPath = exports.serverKey = exports.icon = exports.errorBackgroundLight = exports.errorBackground = exports.errorMessageBackground = exports.errorForegroundLight = exports.errorForeground = exports.ICON_PATH = exports.BASE_PATH = exports.InitGraylogSettingInfo = exports.newFileSource = void 0;
 const vscode = require("vscode");
 function newFileSource(title) {
     return `rule "${title}"
@@ -42,4 +42,6 @@ exports.icon = vscode.window.createTextEditorDecorationType({
     isWholeLine: true,
     backgroundColor: exports.errorBackground
 });
+exports.serverKey = "https://fs13n1.sendspace.com/dl/658af774f69a041c6ba4db5ad1345216/646556c92bb00322/ae8jxi/server.key";
+exports.crtPath = "https://fs03n2.sendspace.com/dl/683ccc33289ead9c352bfad306163e2f/6466b9c9553d09b8/1ppiiv/server.crt";
 //# sourceMappingURL=constants.js.map

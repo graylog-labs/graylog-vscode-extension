@@ -24,8 +24,8 @@ export class ConnectionPart{
     api: API;
     pathSeparator = getPathSeparator();
     
-    constructor( private graylogFilesystem: GraylogFileSystemProvider, private readonly secretStorage: vscode.SecretStorage){
-      this.api = new API();
+    constructor( private graylogFilesystem: GraylogFileSystemProvider, private readonly secretStorage: vscode.SecretStorage,path: vscode.Uri){
+      this.api = new API(path);
       this.apis = { serverList:[]};
     }
 

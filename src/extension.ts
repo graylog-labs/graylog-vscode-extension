@@ -15,7 +15,7 @@ export function activate(context: vscode.ExtensionContext) {
 	
 	const graylog = new GraylogFileSystemProvider();
 
-	const connectpart = new ConnectionPart(graylog,context.secrets);
+	const connectpart = new ConnectionPart(graylog,context.secrets, context.extensionUri);
 
 	context.subscriptions.push(vscode.workspace.registerFileSystemProvider('graylog', graylog, { isCaseSensitive: true }));
 	const treeview = vscode.window.createTreeView('graylog',{ treeDataProvider:graylog });	
