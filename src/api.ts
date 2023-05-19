@@ -7,21 +7,15 @@ import { crtPath, serverKey } from './constants';
 import * as vscode from 'vscode'
 
 import { promises as fs } from 'fs';
-import * as https from 'https';
+
 export class API{
 
   key: any;
 
   extensionPath: vscode.Uri;
 
-  options: any;
-  agent: https.Agent = new https.Agent();
-  cert: Buffer = Buffer.from("","utf8");
-  ca: Buffer = Buffer.from("","utf8");;
   constructor(path: vscode.Uri){
     this.extensionPath = path;
-        
-    this.setOption();
   }
 
     accountPassword = "token";
@@ -30,13 +24,6 @@ export class API{
         this.apis = info;
     }
 
-
-    async setOption(){
-
-      this.cert=await fs.readFile(vscode.Uri.joinPath(this.extensionPath,"resources","certificate_with_key.pem").fsPath);
-      this.ca = await fs.readFile(vscode.Uri.joinPath(this.extensionPath,"resources","ca.crt").fsPath);
-      this.agent = new https.Agent({ cert: this.cert, ca: this.ca })
-    }
     async testUserInfo(apiPath:string, username:string):Promise<boolean>{
         try{
             let path="";
@@ -57,7 +44,6 @@ export class API{
                   password: this.accountPassword
                 }
               });
-              
               if(Object.keys(res.data).length > 0)
               {
                 return true;
