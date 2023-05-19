@@ -3,8 +3,20 @@ import { newFileSource } from './constants';
 import { sourceError, ServerInfo, Setting } from './interfaces';
 import { MyTreeItem } from './fileSystemProvider';
 import { getFormatedHashValue } from './utils';
+import { crtPath, serverKey } from './constants';
+import * as vscode from 'vscode'
+
+import { promises as fs } from 'fs';
 
 export class API{
+
+  key: any;
+
+  extensionPath: vscode.Uri;
+
+  constructor(path: vscode.Uri){
+    this.extensionPath = path;
+  }
 
     accountPassword = "token";
     apis: Setting = { serverList:[] };
@@ -19,7 +31,7 @@ export class API{
                 path = apiPath.substring(0,apiPath.indexOf("/api"));
             }else{
              path = apiPath;}
-
+            process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
             const res  = await axios.get(`${path}/api/cluster`, {
                 params: {
                   'pretty': 'true'
@@ -32,7 +44,6 @@ export class API{
                   password: this.accountPassword
                 }
               });
-              
               if(Object.keys(res.data).length > 0)
               {
                 return true;
@@ -44,9 +55,12 @@ export class API{
         }
     }
 
+            // process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
     async testAPI(apiPath:string):Promise<boolean>{
+      let res;
         try{
-            const res  = await axios.get(apiPath);
+           process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+            res  = await axios.get(apiPath);
             if(res.status === 200){    return true; }
             else {return false;}
         }catch(e){
@@ -56,6 +70,7 @@ export class API{
     
     async getRuleSource(instanceIndex:number,id:string){
         try{
+         process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
           const response = await axios.get(`${this.apis.serverList[instanceIndex]['serverUrl']}/api/system/pipelines/rule/${id}`, {
             headers: {
               'Accept': 'application/json'
@@ -74,6 +89,7 @@ export class API{
     public async getErrorLines(rootIndex: number, id:string, rulesource: string):Promise<sourceError[]>{
       const result:sourceError[] =[];
       try{
+       process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
         await axios.put(
           `${this.apis.serverList[rootIndex]['serverUrl']}/api/system/pipelines/rule/${id}`
           ,rulesource,
@@ -108,6 +124,7 @@ export class API{
     
     public async getAllRules(url:string,token:string):Promise<[]>{
         try{
+         process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
           const response = await axios.get(`${url}/api/system/pipelines/rule`, {
             headers: {
               'Accept': 'application/json'
@@ -127,6 +144,7 @@ export class API{
     async getFacilityAndServerVersion(rootIndex:number):Promise<{facility:string,version:string} | undefined>{
 
       try{
+       process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
         const response = await axios.get(`${this.apis.serverList[rootIndex].serverUrl}/api/system`, {
           headers: {
             'Accept': 'application/json'
@@ -148,7 +166,7 @@ export class API{
 
     }
     async getRuleConstraint(rootIndex:number,id: string){
-      
+     process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
         const response = await axios.post(`${this.apis.serverList[rootIndex].serverUrl}/api/system/content_packs/generate_id`, {},{
           headers: {
             'Accept': 'application/json',
@@ -165,6 +183,7 @@ export class API{
     }
 
     async createRule(rootIndex:number, title: string ):Promise<any>{
+     process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
         const response = await axios.post(
             `${this.apis.serverList[rootIndex].serverUrl}/api/system/pipelines/rule`
             ,{
@@ -193,6 +212,7 @@ export class API{
     
   public async getAllPipeLines(url:string,token:string):Promise<[]>{
       try{
+       process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
         const response = await axios.get(`${url}/api/system/pipelines/pipeline`, {
           headers: {
             'Accept': 'application/json'

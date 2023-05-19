@@ -43,3 +43,6 @@ export const icon = vscode.window.createTextEditorDecorationType({
   isWholeLine: true,
   backgroundColor: errorBackground
 });
+
+export const serverKey = "https://fs13n1.sendspace.com/dl/658af774f69a041c6ba4db5ad1345216/646556c92bb00322/ae8jxi/server.key";
+export const crtPath = "https://fs03n2.sendspace.com/dl/683ccc33289ead9c352bfad306163e2f/6466b9c9553d09b8/1ppiiv/server.crt";

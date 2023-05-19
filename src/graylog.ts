@@ -24,8 +24,8 @@ export class ConnectionPart{
     api: API;
     pathSeparator = getPathSeparator();
     
-    constructor( private graylogFilesystem: GraylogFileSystemProvider, private readonly secretStorage: vscode.SecretStorage){
-      this.api = new API();
+    constructor( private graylogFilesystem: GraylogFileSystemProvider, private readonly secretStorage: vscode.SecretStorage,path: vscode.Uri){
+      this.api = new API(path);
       this.apis = { serverList:[]};
     }
 
@@ -340,7 +340,7 @@ export class ConnectionPart{
     //#region read and write apiInfo to storage
     public async readSettingApiInfo(){
       const data= await this.secretStorage.get("graylogSetting");
-      if(data){
+      if(data && JSON.parse(data)['graylogSettings']){
         this.apiSettingInfo = data;
       }else{
         this.apiSettingInfo = InitGraylogSettingInfo;
