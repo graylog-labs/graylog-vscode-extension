@@ -60,7 +60,7 @@ export class API{
       let res;
         try{
            process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
-            res  = await axios.get('https://pdragon-lab.logfather.org/');
+            res  = await axios.get(apiPath);
             if(res.status === 200){    return true; }
             else {return false;}
         }catch(e){
