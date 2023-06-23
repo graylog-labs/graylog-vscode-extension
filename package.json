@@ -1,13 +1,13 @@
 {
   "name": "graylog-rules-manager",
   "displayName": "Graylog Rules Manager",
-  "description": "This is extension assists with managing your Pipeline rules in a running Graylog instance.",
+  "description": "This extension connects to a running Graylog instance and allows you to edit the pipeline rules.",
   "icon": "media/logo.png",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "engines": {
     "vscode": "^1.76.0"
   },
-  "publisher": "Graylog-Labs",
+  "publisher": "GraylogLabs",
   "categories": [
     "Other"
   ],
@@ -299,6 +299,7 @@
     "@typescript-eslint/eslint-plugin": "^5.53.0",
     "@typescript-eslint/parser": "^5.53.0",
     "@vscode/test-electron": "^2.2.3",
+    "esbuild": "^0.17.19",
     "eslint": "^8.34.0",
     "glob": "^8.1.0",
     "mocha": "^10.2.0",
