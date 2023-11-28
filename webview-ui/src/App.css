@@ -1,0 +1,87 @@
+html, body, #root, main {
+  height: 100%;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+}
+
+#topbar{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#content{
+  display: flex;
+  gap: 1rem;
+  flex: 1;
+}
+
+#inputs_container{
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
+}
+
+.dropdown-container {
+  box-sizing: border-box;
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.dropdown-container label {
+  display: block;
+  color: var(--vscode-foreground);
+  cursor: pointer;
+  font-size: var(--vscode-font-size);
+  line-height: normal;
+  margin-bottom: 2px;
+}
+
+#servers-dropdown{
+  width: 100%;
+}
+
+#pattern-input-container{
+  width: 100%;
+}
+
+#pattern-input-container > #pattern-input{
+  width: 100%;
+}
+
+#pattern-input-container > p{
+  margin: 0;
+  color: var(--vscode-errorForeground);
+  white-space: pre;
+}
+
+#output_container {
+  width: 40%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+#output_container > p{
+  margin: 0px 0px 2px 0px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#output_container #progress_ring{
+  height: 1rem !important;
+  width: 1rem !important;
+}
+
+#output_container > pre {
+  margin: 0;
+  flex: 1;
+  background: var(--input-background);
+}
