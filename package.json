@@ -3,7 +3,7 @@
   "displayName": "Graylog Rules Manager",
   "description": "This extension connects to a running Graylog instance and allows you to edit the pipeline rules.",
   "icon": "media/logo.png",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "engines": {
     "vscode": "^1.76.0"
   },
