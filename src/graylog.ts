@@ -7,6 +7,7 @@ import { RuleField, sourceError, apiInstance, PipleLine, ServerInfo, Setting } f
 import { API } from './api';
 import { getFormatedHashValue } from './utils';
 import * as moment from 'moment';
+import { resolve } from 'path';
 
 export class ConnectionPart{
     public apis: Setting;
@@ -20,16 +21,16 @@ export class ConnectionPart{
 
     public pipleLines:PipleLine[][] = [];
     public apiSettingInfo:string = "";
-    
+
     api: API;
     pathSeparator = getPathSeparator();
-    
+
     constructor( private graylogFilesystem: GraylogFileSystemProvider, private readonly secretStorage: vscode.SecretStorage,path: vscode.Uri){
       this.api = new API(path);
       this.apis = { serverList:[]};
     }
 
-    
+
     public async createRule(filename:string){
       const firstSlashIndex = filename.indexOf(this.pathSeparator);
       const serverName = filename.substring(0,firstSlashIndex);
@@ -43,51 +44,38 @@ export class ConnectionPart{
 
       let title = newRulename;
       try {
-        const data = await this.api.createRule(rootIndex,title);   
+        const data = await this.api.createRule(rootIndex,title);
         if(data !== null){
           this.wrilteFile(rootIndex, data);
-        }     
+        }
       } catch (error) {
           vscode.window.showErrorMessage(error);
-          this.graylogFilesystem.delete(vscode.Uri.parse(`graylog:/${filename}.grule`));     
+          this.graylogFilesystem.delete(vscode.Uri.parse(`graylog:/${filename}.grule`));
           return;
       }
     }
-    
+
     public async onDidChange(document:vscode.TextDocument){
       await this.chekcInfo();
 
       let  fileName = document.fileName;
-      
+
       if(fileName[0] === this.pathSeparator) {
         fileName = fileName.substring(1);
       }
       const iIndex = fileName.indexOf(this.pathSeparator);
 
       fileName=fileName.substring(iIndex+1);
-      
+
       let dIdx = fileName.lastIndexOf('.');
       let title= fileName.substring(0,dIdx);
-      
+
       if( fileName.includes('.json') ){
         await vscode.commands.executeCommand('editor.action.formatDocument');
 
-        if(fileName === 'graylogSetting.json'){ 
-          let value;
-          try {
-            if(value = JSON.parse(document.getText())){
-              this.apis.serverList = (value['graylogSettings']) as ServerInfo[];
-              this.api.setApiInfo(this.apis);
-  
-              this.apiSettingInfo = document.getText();
-              this.writeSettingApiInfoToStorage(this.apiSettingInfo);
-             }
-          } catch (error) {}
-        }
-
         return;
       }
-      
+
       const gIndex = this.index;
       const rootIndex = this.index;
       const dindex = this.grules.findIndex( ( rule )=>{ return rule.title === title; });
@@ -95,8 +83,8 @@ export class ConnectionPart{
       if(dindex === -1){
         return;
       }
-      
-      
+
+
       this.setActiveStatusText( gIndex, this.grules[dindex].title);
       let id = this.grules[dindex].id;
       let rulesource =await this.api.getRuleSource( rootIndex, id );
@@ -112,7 +100,7 @@ export class ConnectionPart{
       this.errors.forEach((oneresult)=>{
         let line = oneresult.line-1;
         let indexOf = oneresult.position_in_line;
-        // let position = new vscode.Position(line, indexOf +1 ); 
+        // let position = new vscode.Position(line, indexOf +1 );
         let position = new vscode.Position(line, 1 );
         let position1 = new vscode.Position(line, 10 );
         // document.getWordRangeAtPosition(position)
@@ -131,22 +119,22 @@ export class ConnectionPart{
                 color: errorForegroundLight
               }
             },
-          }; 
+          };
           decorationOptions.push({
             range,
             renderOptions: decInstanceRenderOptions ,
           });
 
         }
-          
+
       });
-      vscode.window.activeTextEditor?.setDecorations(icon,decorationOptions); 
+      vscode.window.activeTextEditor?.setDecorations(icon,decorationOptions);
     }
 
     public async logInfoCheck(url: string, token:string):Promise<boolean>{
       if(!(await this.api.testAPI(url))){
         return false;
-      }      
+      }
 
       if(!await this.api.testUserInfo(url,token)){
         return false;
@@ -159,7 +147,7 @@ export class ConnectionPart{
       let cumulative = vscode.Uri.parse('graylog:/');
 
       const name = this.apis.serverList[rootIndex]['name'];
-      
+
       const basePath = vscode.Uri.parse('graylog:/');
 
       cumulative = vscode.Uri.joinPath( cumulative, name);
@@ -173,26 +161,27 @@ export class ConnectionPart{
         }
       }
 
-      this.graylogFilesystem.writeFile(  vscode.Uri.joinPath( cumulative, `${paths[paths.length -1]}.grule` ), Buffer.from(rule['source']), { create: true, overwrite: true });
+      this.graylogFilesystem.writeFile(vscode.Uri.joinPath( cumulative, `${paths[paths.length -1]}.grule` ), Buffer.from(rule['source']), { create: true, overwrite: true });
     }
-    
+
     public async prepareForwork(){
-  
+
         const num = this.index;
 
         this.graylogFilesystem.createDirectory(vscode.Uri.parse(`graylog:/${this.apis.serverList[num]['name']}`));
         if(await this.logInfoCheck(this.apis.serverList[num]['serverUrl'],this.apis.serverList[num]['token'])){
           const rules =await this.api.getAllRules(this.apis.serverList[num]['serverUrl'],this.apis.serverList[num]['token']);
+          console.log({rules});
           const tempArray:RuleField[]=[];
           rules.forEach((rule)=>{
             this.wrilteFile(num,rule);
-            tempArray.push({  
+            tempArray.push({
               title: rule['title'],
               id: rule['id'],
               description: rule['description'],
             });
           });
-  
+
           this.grules = tempArray;
 
           let pipelines =await this.api.getAllPipeLines(this.apis.serverList[num]['serverUrl'],this.apis.serverList[num]['token']);
@@ -206,7 +195,7 @@ export class ConnectionPart{
                 }
               });
             });
-            tempPipelineArray.push({  
+            tempPipelineArray.push({
               id: pipeline['id'],
               title: pipeline['title'],
               description: pipeline['description'],
@@ -216,30 +205,30 @@ export class ConnectionPart{
               usedInRules: usedin
             });
           });
-  
+
           this.pipleLines.push(tempPipelineArray);
 
         }else{
           vscode.window.showErrorMessage("API Info is not correct. Please check again...");
         }
-        
+
       this.graylogFilesystem.refresh();
     }
 
-    
 
 
-    
+
+
     public async clearworkspace(result:{label:any,index:number}){
 
       this.index = result.index;
       await vscode.workspace.saveAll();
       await vscode.commands.executeCommand('workbench.action.closeAllEditors');
-      
+
       for (const [name] of this.graylogFilesystem.readDirectory(vscode.Uri.parse('graylog:/'))) {
           this.graylogFilesystem.delete(vscode.Uri.parse(`graylog:/${name}`));
       }
-      
+
       await this.prepareForwork();
       this.graylogFilesystem.refresh();
     }
@@ -255,7 +244,7 @@ export class ConnectionPart{
     public async refreshWorkspace(){
       await vscode.workspace.saveAll();
       await this.wait(1000);
-      
+
       const indexNum = this.index;
       let tempRules = await this.api.getAllRules(this.apis.serverList[indexNum]['serverUrl'],this.apis.serverList[indexNum]['token']);
       for(const tmpRule of tempRules){
@@ -291,7 +280,7 @@ export class ConnectionPart{
             }
           });
         });
-        tempPipelineArray.push({  
+        tempPipelineArray.push({
           id: pipeline['id'],
           title: pipeline['title'],
           description: pipeline['description'],
@@ -331,7 +320,7 @@ export class ConnectionPart{
 
     public updateRule(rootIndex:number,registeredRule:RuleField,updatedRule:any){
       const path = this.generateUriFromTitle(rootIndex, registeredRule.title);
-      
+
       if(updatedRule['source'] !== this.readRule(rootIndex,registeredRule.title).toString() ){
         this.graylogFilesystem.writeFile( path, Buffer.from(updatedRule['source']), { create: true, overwrite: true });
       }
@@ -354,18 +343,135 @@ export class ConnectionPart{
       await this.secretStorage.store("graylogSetting",apiInfo);
     }
 
-    public writeSettingApiInfoToFileSystem(){
-      this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/graylogSetting.json`),Buffer.from(this.apiSettingInfo), { create: true, overwrite: true });
-    }
-
     public async initSettings(){
       await this.readSettingApiInfo();
-      this.writeSettingApiInfoToFileSystem();
     }
 
     public async openSettings(){
-      const doc =await vscode.workspace.openTextDocument(vscode.Uri.parse(`graylog:/graylogSetting.json`));
-      await vscode.window.showTextDocument(doc);
+      let  settings: ServerInfo[] = this.apis.serverList;
+      const quickPick = vscode.window.createQuickPick();
+      quickPick.canSelectMany = false;
+
+      quickPick.items = [
+        { label: 'Add New Server', picked: true },
+        ...settings.map(({name})=> ({label: name, buttons: [{ iconPath: new vscode.ThemeIcon("trash"), tooltip: "Delete"}]}))
+      ];
+
+      quickPick.onDidAccept(async () => {
+        const selected = quickPick.selectedItems[0];
+        let selectedServer = settings.find(({name})=> name === selected.label) || {serverUrl: '', token: '', name: ''};
+        const newServer = await this.editServerInfo(selectedServer);
+
+        const index = settings.findIndex(({name})=> name === selected.label);
+        if(index === -1){
+          settings.unshift(newServer);
+        } else {
+          settings[index] = newServer;
+        }
+        quickPick.dispose();
+        this.saveSettings(settings);
+      });
+
+      quickPick.onDidTriggerItemButton(async ({item: {label}}) => {
+        const index = settings.findIndex(({name})=> name === label);
+        vscode.window.showWarningMessage(`Are you sure you want to delete ${label}?`, { modal: true }, 'Yes').then((value) => {
+          if(value === 'Yes'){
+            settings.splice(index, 1);
+            quickPick.dispose();
+            this.saveSettings(settings);
+          }
+        });
+      });
+
+      quickPick.show();
+
+    }
+
+    async saveSettings(apiInfo: ServerInfo[]){
+      const newSettings = {graylogSettings: apiInfo};
+      await this.writeSettingApiInfoToStorage(JSON.stringify(newSettings));
+      await this.readSettingApiInfo();
+      this.openSettings();
+    }
+
+    async editServerInfo(serverInfo: ServerInfo): Promise<ServerInfo>{
+      let step: number = 1;
+      const inputBox = vscode.window.createInputBox();
+      inputBox.ignoreFocusOut = true;
+      inputBox.value = serverInfo.serverUrl;
+      this.showServerUrlInputBox(inputBox);
+      inputBox.show();
+
+      inputBox.onDidChangeValue(async () => {
+        inputBox.validationMessage = '';
+      });
+
+      return await new Promise((resolve) => {
+        inputBox.onDidAccept(async () => {
+          const inputValue = inputBox.value;
+          switch(step){
+            case 1:
+              // validate if it's a valid url
+              try {
+                const url = new URL(inputValue);
+                if (!url.protocol.startsWith('http')) {
+                  throw new Error('Invalid protocol');
+                }
+                serverInfo.serverUrl = inputValue.replace(/\/$/, "");
+                inputBox.value = serverInfo.token;
+                step++;
+                this.showTokenInputBox(inputBox);
+              }catch {
+                inputBox.validationMessage = 'Invalid server url';
+              }
+              break;
+            case 2:
+              if(!inputValue){
+                inputBox.validationMessage = 'Token is required';
+              }else {
+                serverInfo.token = inputValue;
+                inputBox.value = serverInfo.name;
+                step++;
+                this.showNameInputBox(inputBox);
+              }
+              break;
+            case 3:
+              if(!inputValue){
+                inputBox.validationMessage = 'Name is required';
+              }else {
+                serverInfo.name = inputValue;
+                inputBox.hide();
+                inputBox.dispose();
+                resolve(serverInfo);
+              }
+              break;
+          }
+        });
+      });
+    }
+
+    async showServerUrlInputBox (inputBox: vscode.InputBox) {
+      inputBox.placeholder = 'Server Url';
+      inputBox.prompt = 'Please input the server url';
+      inputBox.step = 1;
+      inputBox.totalSteps = 3;
+      inputBox.title = 'Server Url';
+    };
+
+    async showTokenInputBox (inputBox: vscode.InputBox) {
+      inputBox.placeholder = 'Token';
+      inputBox.prompt = 'Please input the token';
+      inputBox.step = 2;
+      inputBox.totalSteps = 3;
+      inputBox.title = 'Token';
+    }
+
+    async showNameInputBox (inputBox: vscode.InputBox) {
+      inputBox.placeholder = 'Name';
+      inputBox.prompt = 'Please input the name';
+      inputBox.step = 3;
+      inputBox.totalSteps = 3;
+      inputBox.title = 'Name';
     }
 
     async chekcInfo(){
@@ -387,10 +493,10 @@ export class ConnectionPart{
             const id =this.getRuleId(rule.pathUri);
             if(id){
               ids.push(id);
-            }  
+            }
         });
       }
-      
+
       let rootFolderName = items[0].pathUri.path.split(/[\\|/]/)[1];
       const rootIndex = this.apis.serverList.findIndex((info:any)=>info['name'] === rootFolderName);
 
@@ -443,17 +549,17 @@ export class ConnectionPart{
         entities
       };
 
-      
+
       this.graylogFilesystem.writeFile(vscode.Uri.parse(`graylog:/contentPack.json`), Buffer.from( JSON.stringify(result) ), { create: true, overwrite: true });
       vscode.commands.executeCommand( 'vscode.open', vscode.Uri.parse(`graylog:/contentPack.json`));
-      
+
     }
 
     getRuleId(uri:vscode.Uri):string | undefined{
       let title = uri.path.substring(1);;
       let rootFolderName = uri.path.split(/[\\|/]/)[1];
-      
-      
+
+
       title = title.replace(rootFolderName,"").substring(1).replace(/[\\|/]/,'/').replace(".grule","");
 
       for(const item of this.grules){
@@ -494,7 +600,7 @@ export class ConnectionPart{
         this.saveFilrOrFolder(item,uri[0]);
       }
     }
-    
+
     async saveFilrOrFolder(item:MyTreeItem, fileUri:vscode.Uri){
       if(this.graylogFilesystem.hasChildren(item)){
         vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(fileUri,...this.getFileOrFolderPath(item.pathUri)));
@@ -512,7 +618,7 @@ export class ConnectionPart{
       if(fpath[0] === '\\' || fpath[0]==='/'){
         fpath = fpath.substring(1);
       }
-      const paths = fpath.split(/[\\|/]/); 
+      const paths = fpath.split(/[\\|/]/);
       return paths;
     }
 

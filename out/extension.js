@@ -5,6 +5,7 @@ const vscode = require("vscode");
 const graylog_1 = require("./graylog");
 const fileSystemProvider_1 = require("./fileSystemProvider");
 const utils_1 = require("./utils");
+const GrokDebuggerPanel_1 = require("./panels/GrokDebuggerPanel");
 const colorData = require('../themes/color');
 function activate(context) {
     (0, utils_1.addColorSettings)(colorData);
@@ -75,6 +76,9 @@ function activate(context) {
         ///action for export to content pack
         await connectpart.createContentPack();
         vscode.commands.executeCommand("graylog.MultiSelect");
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand("graylog.grokDebugger", () => {
+        GrokDebuggerPanel_1.GrokDebuggerPanel.render(context.extensionUri, context.secrets, connectpart);
     }));
     vscode.workspace.onDidChangeTextDocument((e) => {
         checkStatusBarShowing(e?.document.uri.scheme, statusBarItem);

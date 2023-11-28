@@ -6,24 +6,24 @@ import { ConnectionPart } from './graylog';
 import {GraylogFileSystemProvider} from './fileSystemProvider';
 import {addColorSettings} from './utils';
 import { MyTreeItem } from './fileSystemProvider';
+import { GrokDebuggerPanel } from "./panels/GrokDebuggerPanel";
 
 const colorData = require('../themes/color');
 
 export function activate(context: vscode.ExtensionContext) {
-
 	addColorSettings(colorData);
-	
+
 	const graylog = new GraylogFileSystemProvider();
 
 	const connectpart = new ConnectionPart(graylog,context.secrets, context.extensionUri);
 
 	context.subscriptions.push(vscode.workspace.registerFileSystemProvider('graylog', graylog, { isCaseSensitive: true }));
-	const treeview = vscode.window.createTreeView('graylog',{ treeDataProvider:graylog });	
+	const treeview = vscode.window.createTreeView('graylog',{ treeDataProvider:graylog });
 
 	context.subscriptions.push(vscode.commands.registerCommand('graylog.RefreshWorkSpace', async () => {
 		await connectpart.refreshWorkspace();
 	}));
-	
+
 	context.subscriptions.push(vscode.commands.registerCommand('graylog.showCreateInputBox', async () => {
 		console.log('---------------');
 	}));
@@ -31,7 +31,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('graylog.treeItemClick',(item:MyTreeItem)=>{
 		graylog.onClickItem(item);
 	}));
-	
+
 	context.subscriptions.push(vscode.commands.registerCommand('graylog.settingApiInfo', async () => {
 		await connectpart.initSettings();
 		connectpart.openSettings();
@@ -56,7 +56,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 		// connectpart.createNewRule(item);
 	}));
-	
+
 
 	context.subscriptions.push(vscode.commands.registerCommand('graylog.selectInstances',async ()=>{
 		await connectpart.initSettings();
@@ -73,13 +73,13 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 			const result = await vscode.window.showQuickPick(quickItems, { placeHolder: "Please select the server" });
 			const resultIndex = quickItems.findIndex((item)=> item === result);
-			  
+
 			if (result && resultIndex > -1) {
 				connectpart.clearworkspace({ label: result, index: resultIndex});
 			}
 		}
 	}));
-	
+
 	context.subscriptions.push(vscode.commands.registerCommand('graylog.MultiSelect', () => {
 		graylog.updateTreeViewMode();
 	}));
@@ -98,11 +98,15 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.commands.executeCommand("graylog.MultiSelect");
 	}));
 
+	context.subscriptions.push(vscode.commands.registerCommand("graylog.grokDebugger", () => {
+    GrokDebuggerPanel.render(context.extensionUri, context.secrets, connectpart);
+  }));
+
 	vscode.workspace.onDidChangeTextDocument((e)=>{
 		checkStatusBarShowing(e?.document.uri.scheme,statusBarItem);
 		connectpart.onDidChange(e?.document);
 	});
-	
+
 	vscode.window.onDidChangeActiveTextEditor(e=>{
 		checkStatusBarShowing(e?.document.uri.scheme,statusBarItem);
 

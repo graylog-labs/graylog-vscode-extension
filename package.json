@@ -100,6 +100,11 @@
           "light": "resources/light/save.svg",
           "dark": "resources/dark/save.svg"
         }
+      },
+      {
+        "command": "graylog.grokDebugger",
+        "title": "Open Grok Debugger",
+        "category": "Graylog"
       }
     ],
     "menus": {
@@ -284,6 +289,9 @@
     ]
   },
   "scripts": {
+    "install:all": "npm install && cd webview-ui && npm install",
+    "start:webview": "cd webview-ui && npm run start",
+    "build:webview": "cd webview-ui && npm run build",
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
